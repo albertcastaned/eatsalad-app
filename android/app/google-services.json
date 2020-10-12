@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "452833574693",
+    "firebase_url": "https://eat-salad-b4dc7.firebaseio.com",
+    "project_id": "eat-salad-b4dc7",
+    "storage_bucket": "eat-salad-b4dc7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:452833574693:android:5fbc5721ae077f6c7464cc",
+        "android_client_info": {
+          "package_name": "com.eatsalad.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "452833574693-fb01uobuth19mcg4ot5o495q7negpqqr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAy29chyjbObO_wgyQCeOut-XT4f1fqaZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "452833574693-fb01uobuth19mcg4ot5o495q7negpqqr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
