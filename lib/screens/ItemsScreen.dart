@@ -336,7 +336,6 @@ class AmenitiesSection extends StatelessWidget {
           itemCount: amenities.amenity.ingredients.length,
           itemBuilder: (context, index) => CounterListView(
             title: amenities.amenity.ingredients[index].name,
-            minValue: 1,
             maxValue: amenities.maximumSelect,
             onPressed: null,
           ),
