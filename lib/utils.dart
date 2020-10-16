@@ -100,9 +100,9 @@ ProgressDialog buildLoadingDialog(BuildContext context, String message) {
   return dialog;
 }
 
-Future<Map<String, dynamic>> apiPost(String apiUrl, Map<String, dynamic> body,
+Future<dynamic> apiPost(String apiUrl, Map<String, dynamic> body,
     Map<String, String> headers) async {
-  print("POST $apiUrl \n\n Headers: $headers \n\n Body: $body \n\n ");
+  print("POST $apiUrl \n\n Body: $body \n\n ");
   try {
     final apiResponse = await http
         .post(
@@ -123,9 +123,8 @@ Future<Map<String, dynamic>> apiPost(String apiUrl, Map<String, dynamic> body,
   }
 }
 
-Future<Map<String, dynamic>> apiGet(
-    String apiUrl, Map<String, String> headers) async {
-  print("POST $apiUrl \n\n Headers: $headers \n\n");
+Future<dynamic> apiGet(String apiUrl, Map<String, String> headers) async {
+  print("POST $apiUrl \n\n");
 
   try {
     final apiResponse = await http

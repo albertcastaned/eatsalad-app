@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>452833574693-8mto50kh5piq2d0quhkil8l9lu2pstvs.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.452833574693-8mto50kh5piq2d0quhkil8l9lu2pstvs</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>452833574693-9mlv3iu924rgnlm7ib5gs4j1ksqlugrp.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCAB-_Cww9M99EV-yLLAWF24krkYgaqPgE</string>
+	<key>GCM_SENDER_ID</key>
+	<string>452833574693</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.eatsalad.app</string>
+	<key>PROJECT_ID</key>
+	<string>eat-salad-b4dc7</string>
+	<key>STORAGE_BUCKET</key>
+	<string>eat-salad-b4dc7.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:452833574693:ios:4f9b78e90131fffa7464cc</string>
+	<key>DATABASE_URL</key>
+	<string>https://eat-salad-b4dc7.firebaseio.com</string>
+</dict>
+</plist>

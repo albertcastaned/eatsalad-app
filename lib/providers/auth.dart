@@ -14,17 +14,15 @@ class Auth with ChangeNotifier {
 
   final _googleSignIn = GoogleSignIn();
 
-  Future<bool> isLoggedIn() async {
-    return await _auth.currentUser() != null;
-  }
+  bool get isLoggedIn => _auth.currentUser != null;
 
-  Future<void> _authenticate(AuthResult authResult) async {
+  Future<void> _authenticate(UserCredential userCredential) async {
     final apiUrl = "${Constants.server}/profile/";
 
     try {
-      IdTokenResult idToken = await authResult.user.getIdToken();
+      String idToken = await userCredential.user.getIdToken();
 
-      await apiGet(apiUrl, requestApiHeaders(idToken.token));
+      await apiGet(apiUrl, requestApiHeaders(idToken));
 
       print('Api auth succeded');
       notifyListeners();
@@ -37,7 +35,8 @@ class Auth with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    _auth.signOut();
+    await _auth.signOut();
+    await _googleSignIn.signOut();
     print("User signed out");
     notifyListeners();
   }
@@ -49,7 +48,7 @@ class Auth with ChangeNotifier {
     await loadingDialog.show();
 
     try {
-      final FirebaseUser user = (await _auth.createUserWithEmailAndPassword(
+      final User user = (await _auth.createUserWithEmailAndPassword(
               email: email, password: password))
           .user;
       assert(user != null);
@@ -66,7 +65,7 @@ class Auth with ChangeNotifier {
     await dialog.show();
 
     try {
-      final AuthResult authResult = await _auth.signInWithEmailAndPassword(
+      final UserCredential authResult = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -94,16 +93,17 @@ class Auth with ChangeNotifier {
       throw AuthenticationException("Google flow cancelled");
     }
 
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
+    final AuthCredential credential = GoogleAuthProvider.credential(
       idToken: googleSignInAuthentication.idToken,
       accessToken: googleSignInAuthentication.accessToken,
     );
 
-    final AuthResult authResult = await _auth.signInWithCredential(credential);
-    final FirebaseUser user = authResult.user;
+    final UserCredential authResult =
+        await _auth.signInWithCredential(credential);
+    final User user = authResult.user;
     assert(!user.isAnonymous);
 
-    final FirebaseUser currentUser = await _auth.currentUser();
+    final User currentUser = _auth.currentUser;
     assert(user.uid == currentUser.uid);
     print("Firebase auth succeded");
 

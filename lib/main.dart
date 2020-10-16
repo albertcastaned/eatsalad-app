@@ -1,4 +1,6 @@
 // Packages
+import 'package:EatSalad/providers/restaurants.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,6 +12,7 @@ import './routes.dart';
 
 // Providers
 import './providers/auth.dart';
+import './providers/items.dart';
 
 // Screens
 import './screens/HomeScreen.dart';
@@ -17,6 +20,8 @@ import './screens/LoginScreen.dart';
 
 Future main() async {
   await DotEnv().load('.env');
+  await Firebase.initializeApp();
+
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
@@ -29,28 +34,24 @@ class EatApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (ctx) => Auth())],
+      providers: [
+        ChangeNotifierProvider(create: (ctx) => Auth()),
+        ChangeNotifierProvider(create: (ctx) => RestaurantProvider()),
+        ChangeNotifierProvider(create: (ctx) => CategoriesProvider()),
+      ],
       child: Consumer<Auth>(
         builder: (ctx, auth, _) => MaterialApp(
           theme: ThemeData(
-            primaryColor: Colors.green,
+            primaryColor: Color(0xff00c853),
             accentColor: Colors.lightGreen,
             buttonTheme: ButtonThemeData(
-              buttonColor: Colors.green,
+              buttonColor: Color(0xff00c853),
               textTheme: ButtonTextTheme.primary,
             ),
           ),
           debugShowCheckedModeBanner: false,
           //Theme
-          home: FutureBuilder(
-            future: auth.isLoggedIn(),
-            builder: (ctx, authResult) =>
-                authResult.connectionState == ConnectionState.waiting
-                    ? CircularProgressIndicator()
-                    : authResult.data
-                        ? HomeScreen()
-                        : LoginScreen(),
-          ),
+          home: auth.isLoggedIn ? HomeScreen() : LoginScreen(),
           routes: routes,
         ),
       ),

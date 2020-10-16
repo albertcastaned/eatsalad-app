@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:EatSalad/widgets/app_body.dart';
+import 'package:EatSalad/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -13,40 +17,65 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            LoginForm(),
-            Container(
-              child: Wrap(
-                children: <Widget>[
-                  Text(
-                    '¿No tienes cuenta? ',
-                    style: TextStyle(
-                      fontSize: 11,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.of(context).pushNamed(RegisterScreen.routeName);
-                    },
-                    child: Text(
-                      'Regístrate aquí',
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        decoration: TextDecoration.underline,
-                        fontSize: 11,
+    Future<void> _signInWithGoogle() async {
+      try {
+        await Provider.of<Auth>(context, listen: false)
+            .authenticateWithGoogle(context);
+      } on TimeoutException catch (error) {
+        print(error);
+        buildError(context, Error.CONNECTION_ERROR);
+      } catch (error) {
+        print(error);
+      }
+    }
+
+    return AppBody(
+      child: Center(
+        child: AppCard(
+          child: Padding(
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image(image: AssetImage('assets/logo.jpeg')),
+                LoginForm(),
+                Container(
+                  child: Wrap(
+                    children: <Widget>[
+                      Text(
+                        '¿No tienes cuenta? ',
+                        style: TextStyle(
+                          fontSize: 11,
+                        ),
                       ),
-                    ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.of(context)
+                              .pushNamed(RegisterScreen.routeName);
+                        },
+                        child: Text(
+                          'Regístrate aquí',
+                          style: TextStyle(
+                            color: Theme.of(context).accentColor,
+                            decoration: TextDecoration.underline,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Container(
+                  child: RaisedButton(
+                    child: Text('Iniciar con Google'),
+                    onPressed: () => _signInWithGoogle(),
+                  ),
+                )
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -64,8 +93,6 @@ class _LoginFormState extends State<LoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isEmpty = true;
-
   Map<String, String> _authData = {
     'email': '',
     'password': '',
@@ -77,19 +104,6 @@ class _LoginFormState extends State<LoginForm> {
     _passwordController.text = "blaster64";
 
     super.initState();
-  }
-
-  void _checkForm() {
-    if (_passwordController.text.isNotEmpty &&
-        _emailController.text.isNotEmpty) {
-      setState(() {
-        _isEmpty = false;
-      });
-    } else {
-      setState(() {
-        _isEmpty = true;
-      });
-    }
   }
 
   Future<void> _submit() async {
@@ -133,7 +147,6 @@ class _LoginFormState extends State<LoginForm> {
               }
               return null;
             },
-            onChanged: (value) => _checkForm(),
             onSaved: (value) {
               _authData['email'] = value;
             },
@@ -151,7 +164,6 @@ class _LoginFormState extends State<LoginForm> {
               }
               return null;
             },
-            onChanged: (value) => _checkForm(),
             onSaved: (value) {
               _authData['password'] = value;
             },
