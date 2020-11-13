@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:EatSalad/widgets/app_body.dart';
-import 'package:EatSalad/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -9,8 +7,9 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../providers/auth.dart';
 import '../utils.dart';
-
-import './RegisterScreen.dart';
+import '../widgets/app_body.dart';
+import '../widgets/app_card.dart';
+import 'RegisterScreen.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';

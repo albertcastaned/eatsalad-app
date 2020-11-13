@@ -1,4 +1,5 @@
 // Packages
+import 'package:EatSalad/providers/cart.dart';
 import 'package:EatSalad/providers/restaurants.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -8,12 +9,10 @@ import 'package:provider/provider.dart';
 
 // Local imports
 import './constants.dart';
-import './routes.dart';
-
 // Providers
 import './providers/auth.dart';
 import './providers/items.dart';
-
+import './routes.dart';
 // Screens
 import './screens/HomeScreen.dart';
 import './screens/LoginScreen.dart';
@@ -35,9 +34,18 @@ class EatApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (ctx) => Auth()),
-        ChangeNotifierProvider(create: (ctx) => RestaurantProvider()),
-        ChangeNotifierProvider(create: (ctx) => CategoriesProvider()),
+        ChangeNotifierProvider(
+          create: (ctx) => Auth(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => RestaurantProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => CategoriesProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => Cart(),
+        ),
       ],
       child: Consumer<Auth>(
         builder: (ctx, auth, _) => MaterialApp(

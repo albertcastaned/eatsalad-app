@@ -96,16 +96,22 @@ class Item {
 }
 
 class Amenities {
-  bool multipleChoice;
+  String fieldType;
+  int minimumSelect;
   int maximumSelect;
   bool obligatory;
   Amenity amenity;
 
   Amenities(
-      {this.multipleChoice, this.maximumSelect, this.obligatory, this.amenity});
+      {this.fieldType,
+      this.minimumSelect,
+      this.maximumSelect,
+      this.obligatory,
+      this.amenity});
 
   Amenities.fromJson(Map<String, dynamic> json) {
-    multipleChoice = json['multiple_choice'];
+    fieldType = json['field_type'];
+    minimumSelect = json['minimum_select'];
     maximumSelect = json['maximum_select'];
     obligatory = json['obligatory'];
     amenity =
@@ -114,7 +120,8 @@ class Amenities {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['multiple_choice'] = this.multipleChoice;
+    data['field_type'] = this.fieldType;
+    data['minimum_select'] = this.minimumSelect;
     data['maximum_select'] = this.maximumSelect;
     data['obligatory'] = this.obligatory;
     if (this.amenity != null) {
@@ -122,11 +129,16 @@ class Amenities {
     }
     return data;
   }
+
+  @override
+  String toString() {
+    return amenity.name;
+  }
 }
 
 class Amenity {
   int id;
-  List<Ingredients> ingredients;
+  List<Ingredient> ingredients;
   String name;
   bool active;
   int restaurant;
@@ -136,9 +148,9 @@ class Amenity {
   Amenity.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     if (json['ingredient_set'] != null) {
-      ingredients = new List<Ingredients>();
+      ingredients = new List<Ingredient>();
       json['ingredient_set'].forEach((v) {
-        ingredients.add(new Ingredients.fromJson(v));
+        ingredients.add(new Ingredient.fromJson(v));
       });
     }
     name = json['name'];
@@ -159,14 +171,14 @@ class Amenity {
   }
 }
 
-class Ingredients {
+class Ingredient {
   int id;
   String name;
   String price;
 
-  Ingredients({this.id, this.name, this.price});
+  Ingredient({this.id, this.name, this.price});
 
-  Ingredients.fromJson(Map<String, dynamic> json) {
+  Ingredient.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     name = json['name'];
     price = json['price'];
@@ -178,6 +190,11 @@ class Ingredients {
     data['name'] = this.name;
     data['price'] = this.price;
     return data;
+  }
+
+  @override
+  String toString() {
+    return name;
   }
 }
 

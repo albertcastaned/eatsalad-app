@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flushbar/flushbar.dart';
 
 import 'package:flutter/material.dart';
@@ -8,7 +10,7 @@ import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:progress_dialog/progress_dialog.dart';
 
-import './constants.dart';
+import 'constants.dart';
 
 Flushbar flushBar;
 void buildError(BuildContext context, String message,
@@ -151,4 +153,8 @@ Map<String, String> requestApiHeaders(String token) {
     "Content-Type": "application/json",
     "Authorization": "JWT " + token,
   };
+}
+
+double distanceBetweenPoints(double x1, double y1, double x2, double y2) {
+  return sqrt(pow((x2 - x1), 2) + pow((y2 - y1), 2));
 }

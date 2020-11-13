@@ -1,12 +1,12 @@
 import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:progress_dialog/progress_dialog.dart';
 
-import '../exceptions/authentication_exception.dart';
-
 import '../constants.dart';
+import '../exceptions/authentication_exception.dart';
 import '../utils.dart';
 
 class Auth with ChangeNotifier {

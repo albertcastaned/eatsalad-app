@@ -1,11 +1,13 @@
-import 'package:EatSalad/providers/restaurants.dart';
-import 'package:EatSalad/screens/ItemsScreen.dart';
-import 'package:EatSalad/widgets/app_body.dart';
-import 'package:EatSalad/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/auth.dart';
+import '../providers/restaurants.dart';
+import '../widgets/app_body.dart';
+import '../widgets/app_card.dart';
 import '../widgets/content_loader.dart';
+import './AddressSetupScreen.dart';
+import './ItemsScreen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -27,35 +29,44 @@ class _HomeScreenState extends State<HomeScreen> {
       await Provider.of<Auth>(context, listen: false).logout();
     }
 
-    return Scaffold(
-      body: AppBody(
+    return AppBody(
+      child: SingleChildScrollView(
         child: Container(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  child: ContentLoader(
-                    future: _future,
-                    widget: Consumer<RestaurantProvider>(
-                      builder: (ctx, restaurantData, child) =>
-                          ListView.separated(
-                              separatorBuilder: (context, intex) => Divider(),
-                              itemCount: restaurantData.restaurants.length,
-                              itemBuilder: (context, index) => RestaurantCard(
-                                    restaurant:
-                                        restaurantData.restaurants[index],
-                                  )),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              ContentLoader(
+                future: _future,
+                widget: Consumer<RestaurantProvider>(
+                  builder: (ctx, data, child) => Flexible(
+                    child: RefreshIndicator(
+                      onRefresh: () => _future =
+                          Provider.of<RestaurantProvider>(context,
+                                  listen: false)
+                              .fetchRestaurants(),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        separatorBuilder: (context, intex) => Divider(),
+                        itemCount: data.restaurants.length,
+                        itemBuilder: (context, index) => RestaurantCard(
+                            restaurant: data.restaurants[index],
+                            available: !data.restaurants[index].outOfRange),
+                      ),
                     ),
                   ),
                 ),
-                RaisedButton(
-                  child: Text('Cerrar sesion'),
-                  onPressed: logout,
-                )
-              ],
-            ),
+              ),
+              RaisedButton(
+                child: Text('Config ubicacion'),
+                onPressed: () {
+                  Navigator.of(context).pushNamed(AddressSetupScreen.routeName);
+                },
+              ),
+              RaisedButton(
+                child: Text('Cerrar sesion'),
+                onPressed: logout,
+              )
+            ],
           ),
         ),
       ),
@@ -66,21 +77,24 @@ class _HomeScreenState extends State<HomeScreen> {
 class RestaurantCard extends StatelessWidget {
   final Restaurant restaurant;
   final double radius = 15;
-  RestaurantCard({@required this.restaurant});
+  final bool available;
+  RestaurantCard({@required this.restaurant, this.available = true});
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
       child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => ItemsScreen(
-                restaurant: restaurant,
-              ),
-            ),
-          );
-        },
+        onTap: available
+            ? () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => ItemsScreen(
+                      restaurant: restaurant,
+                    ),
+                  ),
+                );
+              }
+            : null,
         child: Container(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -119,6 +133,25 @@ class RestaurantCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (!available)
+                    Positioned(
+                      top: 0,
+                      right: 5,
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(radius)),
+                        child: Text(
+                          "No Disponible",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
               Container(

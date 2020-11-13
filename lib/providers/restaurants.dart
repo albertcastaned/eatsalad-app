@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_place/google_place.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../constants.dart';
@@ -15,21 +17,26 @@ class Restaurant {
   String city;
   String minimumOrderCost;
   String deliveryFee;
-  int areaCoverage;
+  double areaCoverage;
   bool available;
-
-  Restaurant(
-      {this.id,
-      this.schedule,
-      this.name,
-      this.address,
-      this.image,
-      this.state,
-      this.city,
-      this.minimumOrderCost,
-      this.deliveryFee,
-      this.areaCoverage,
-      this.available});
+  double latitude;
+  double longitude;
+  bool outOfRange = false;
+  Restaurant({
+    this.id,
+    this.schedule,
+    this.name,
+    this.address,
+    this.image,
+    this.state,
+    this.city,
+    this.minimumOrderCost,
+    this.deliveryFee,
+    this.areaCoverage,
+    this.available,
+    this.latitude,
+    this.longitude,
+  });
 
   Restaurant.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -43,8 +50,10 @@ class Restaurant {
     city = json['city'];
     minimumOrderCost = json['minimum_order_cost'];
     deliveryFee = json['delivery_fee'];
-    areaCoverage = json['areaCoverage'];
+    areaCoverage = double.parse(json['areaCoverage']);
     available = json['available'];
+    longitude = double.parse(json['longitude']);
+    latitude = double.parse(json['latitude']);
   }
 
   Map<String, dynamic> toJson() {
@@ -61,6 +70,8 @@ class Restaurant {
     data['delivery_fee'] = this.deliveryFee;
     data['areaCoverage'] = this.areaCoverage;
     data['available'] = this.available;
+    data['longitude'] = this.longitude;
+    data['latitude'] = this.latitude;
     return data;
   }
 }
@@ -119,7 +130,7 @@ class Schedule {
 }
 
 class RestaurantProvider extends ChangeNotifier {
-  List<Restaurant> restaurants;
+  List<Restaurant> restaurants = new List<Restaurant>();
 
   Future<void> fetchRestaurants() async {
     try {
@@ -128,8 +139,26 @@ class RestaurantProvider extends ChangeNotifier {
       final response = await apiGet(apiUrl, requestApiHeaders(token))
           .timeout(Duration(seconds: Constants.timeoutSeconds));
 
+      // Get current selected coordinates
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String longitude = prefs.getString("longitude");
+      final String latitude = prefs.getString("latitude");
+
+      //TODO: Optimize
+
       restaurants =
           (response as List).map((item) => Restaurant.fromJson(item)).toList();
+
+      for (Restaurant restaurant in restaurants) {
+        double distance = distanceBetweenPoints(
+          restaurant.latitude,
+          restaurant.longitude,
+          double.parse(latitude),
+          double.parse(longitude),
+        );
+        restaurant.outOfRange = distance > restaurant.areaCoverage;
+      }
+      notifyListeners();
       return restaurants;
     } catch (error) {
       print(error);

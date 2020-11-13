@@ -9,6 +9,10 @@ class Constants {
       return "http://${DotEnv().env['HOST']}";
   }
 
+  static get googleApiKey {
+    return DotEnv().env['GOOGLE_API_KEY'];
+  }
+
   static get timeoutSeconds {
     return 10;
   }

@@ -1,11 +1,11 @@
-import 'package:EatSalad/widgets/app_body.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import '../constants.dart';
 import '../providers/auth.dart';
 import '../utils.dart';
-import '../constants.dart';
+import '../widgets/app_body.dart';
 
 class RegisterScreen extends StatefulWidget {
   static const routeName = "/register";
