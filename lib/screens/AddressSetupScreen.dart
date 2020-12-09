@@ -132,15 +132,19 @@ class LocationCard extends StatelessWidget {
   });
 
   Future<void> saveSelectedCoordinates(
-      String latitude, String longitude) async {
+      BuildContext context, String latitude, String longitude) async {
     try {
-      print("$latitude $longitude");
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString("direction", direction);
       prefs.setString("latitude", latitude);
       prefs.setString("longitude", longitude);
 
       print("New coordinates saved succesfully");
+
+      // TODO: Find better way to do this ?
+      // Fetch restaurants again
+      Provider.of<RestaurantProvider>(context, listen: false)
+          .fetchRestaurants();
     } catch (error) {
       throw error;
     }
@@ -159,10 +163,10 @@ class LocationCard extends StatelessWidget {
                       value.result.geometry.location.lat.toString();
                   final newLongitude =
                       value.result.geometry.location.lng.toString();
-                  saveSelectedCoordinates(newLatitude, newLongitude);
+                  saveSelectedCoordinates(context, newLatitude, newLongitude);
                 });
               } else {
-                saveSelectedCoordinates(latitude, longitude);
+                saveSelectedCoordinates(context, latitude, longitude);
               }
               Navigator.of(context).pop();
             }

@@ -1,4 +1,10 @@
+import 'package:EatSalad/providers/address.dart';
+import 'package:EatSalad/providers/auth.dart';
+import 'package:EatSalad/providers/payment_methods.dart';
+import 'package:EatSalad/screens/CardListScreen.dart';
+import 'package:EatSalad/utils.dart';
 import 'package:EatSalad/widgets/app_title.dart';
+import 'package:EatSalad/widgets/content_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../widgets/app_body.dart';
@@ -28,6 +34,8 @@ class CartScreen extends StatelessWidget {
                       child: AppTitle(text: restaurant.name),
                     ),
                     Divider(),
+                    OrderAddress(),
+                    Divider(),
                     Container(
                       margin: EdgeInsets.symmetric(vertical: 15),
                       child: Text(
@@ -41,9 +49,9 @@ class CartScreen extends StatelessWidget {
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
                         separatorBuilder: (context, intex) => Divider(),
-                        itemCount: cart.items.length,
+                        itemCount: cart.itemsMap[restaurant].length,
                         itemBuilder: (context, index) => CartItem(
-                          item: cart.items[index],
+                          item: cart.itemsMap[restaurant][index],
                         ),
                       ),
                     ),
@@ -51,6 +59,19 @@ class CartScreen extends StatelessWidget {
                     CartTotal(
                       restaurant: restaurant,
                     ),
+                    Divider(),
+                    Container(
+                      margin: EdgeInsets.symmetric(vertical: 15),
+                      child: Text(
+                        'Metodo de Pago',
+                        style: TextStyle(
+                            fontSize: 23, fontWeight: FontWeight.w400),
+                      ),
+                    ),
+                    SelectedPaymentMethod(),
+                    SizedBox(
+                      height: 80,
+                    )
                   ],
                 ),
               ),
@@ -63,6 +84,122 @@ class CartScreen extends StatelessWidget {
   }
 }
 
+class SelectedPaymentMethod extends StatefulWidget {
+  @override
+  _SelectedPaymentMethodState createState() => _SelectedPaymentMethodState();
+}
+
+class _SelectedPaymentMethodState extends State<SelectedPaymentMethod> {
+  Future<void> setFuture() async {
+    try {
+      Profile profile =
+          await Provider.of<Auth>(context, listen: false).fetchMyProfile();
+      await Provider.of<PaymentMethods>(context, listen: false)
+          .fetchPaymentMethods(profile.stripeCustomerId);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  @override
+  void initState() {
+    setFuture();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentLoader(
+      future: setFuture(),
+      widget: Consumer<PaymentMethods>(
+        builder: (ctx, data, child) => Card(
+          child: InkWell(
+            onTap: () =>
+                Navigator.of(context).pushNamed(CardListScreen.routeName),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      data.selectedMethod.isCash
+                          ? Icon(
+                              Icons.attach_money,
+                              size: 40,
+                              color: Theme.of(context).primaryColor,
+                            )
+                          : getCardTypeIcon(data.selectedMethod.typeCard),
+                      SizedBox(
+                        width: 40,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data.selectedMethod.isCash
+                                ? "Efectivo"
+                                : "**** ${data.selectedMethod.cardNumber}",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (!data.selectedMethod.isCash)
+                            Text(
+                              data.selectedMethod.cardHolderName
+                                  .capitalizeFirstofEach,
+                            ),
+                        ],
+                      ),
+                      Spacer(),
+                      Icon(
+                        Icons.keyboard_arrow_right,
+                        size: 20,
+                      )
+                    ],
+                  ),
+                  if (!data.selectedMethod.isCash)
+                    Align(
+                        alignment: Alignment.bottomRight,
+                        child: Image.asset('assets/stripe.png', width: 125))
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class OrderAddress extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 15),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tu direccion',
+            style: TextStyle(fontSize: 23, fontWeight: FontWeight.w400),
+          ),
+          ContentLoader(
+            future: Provider.of<SelectedAddress>(context, listen: false)
+                .fetchSelectedAddress(),
+            widget: Consumer<SelectedAddress>(
+              builder: (ctx, address, _) => Text(
+                address.selectedAddress.direction,
+              ),
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
 class ConfirmOrderButton extends StatelessWidget {
   final Restaurant restaurant;
   ConfirmOrderButton({@required this.restaurant});
@@ -72,9 +209,21 @@ class ConfirmOrderButton extends StatelessWidget {
     return Consumer<Cart>(
       builder: (ctx, cart, _) => RaisedButton(
         padding: EdgeInsets.all(20),
-        onPressed: cart.getQuantity() > 0
+        onPressed: cart.getQuantity(restaurant) > 0
             ? () {
+                var cartProvider = Provider.of<Cart>(context, listen: false);
                 //TODO: Confirm purchase
+                Provider.of<Orders>(context, listen: false).createOrder(
+                  restaurant: restaurant,
+                  orderItems: cartProvider.itemsMap[restaurant],
+                  subtotal: cartProvider.getTotal(restaurant),
+                  total: cartProvider.getTotal(restaurant) +
+                      double.parse(restaurant.deliveryFee),
+                  payWithCash:
+                      Provider.of<PaymentMethods>(context, listen: false)
+                          .selectedMethod
+                          .isCash,
+                );
               }
             : null,
         child: Row(
@@ -86,7 +235,7 @@ class ConfirmOrderButton extends StatelessWidget {
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             Text(
-              "\$${(cart.getTotal() + double.parse(restaurant.deliveryFee)).toStringAsFixed(2)}",
+              "\$${(cart.getTotal(restaurant) + double.parse(restaurant.deliveryFee)).toStringAsFixed(2)}",
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
@@ -111,7 +260,7 @@ class CartTotal extends StatelessWidget {
             children: [
               PriceRow(
                 title: "Subtotal",
-                value: "\$${cart.getTotal().toStringAsFixed(2)}",
+                value: "\$${cart.getTotal(restaurant).toStringAsFixed(2)}",
                 textStyle: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w300,
@@ -128,7 +277,7 @@ class CartTotal extends StatelessWidget {
               PriceRow(
                 title: "Total",
                 value:
-                    "\$${(cart.getTotal() + double.parse(restaurant.deliveryFee)).toStringAsFixed(2)}",
+                    "\$${(cart.getTotal(restaurant) + double.parse(restaurant.deliveryFee)).toStringAsFixed(2)}",
               ),
             ],
           ),
@@ -183,6 +332,7 @@ class CartItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Flexible(
               child: Container(
@@ -228,7 +378,11 @@ class CartItem extends StatelessWidget {
                   IconButton(
                     color: Theme.of(context).errorColor,
                     onPressed: () {
-                      Provider.of<Cart>(context, listen: false).remove(item);
+                      Provider.of<Cart>(context, listen: false).remove(
+                          Provider.of<RestaurantProvider>(context,
+                                  listen: false)
+                              .selectedRestaurant,
+                          item);
                     },
                     icon: Icon(Icons.delete),
                   ),

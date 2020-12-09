@@ -210,6 +210,7 @@ class CategoriesProvider extends ChangeNotifier {
 
       categories =
           (response as List).map((item) => Category.fromJson(item)).toList();
+      categories = categories.where((i) => i.items.length > 0).toList();
       return categories;
     } catch (error) {
       print(error);

@@ -1,5 +1,8 @@
 // Packages
+import 'package:EatSalad/providers/address.dart';
 import 'package:EatSalad/providers/cart.dart';
+import 'package:EatSalad/providers/orders.dart';
+import 'package:EatSalad/providers/payment_methods.dart';
 import 'package:EatSalad/providers/restaurants.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +48,15 @@ class EatApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => SelectedAddress(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => PaymentMethods(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => Orders(),
         ),
       ],
       child: Consumer<Auth>(

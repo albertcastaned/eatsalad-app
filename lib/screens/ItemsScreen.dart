@@ -136,9 +136,14 @@ class ItemSection extends StatelessWidget {
                   //TODO: Add default image
                   : null,
             ),
+            SizedBox(
+              width: 40,
+            ),
             Expanded(
               flex: 3,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     item.name,
@@ -179,7 +184,7 @@ class _OrderCartPreviewState extends State<OrderCartPreview> {
     return Consumer<Cart>(
       builder: (ctx, cart, _) => RaisedButton(
         padding: EdgeInsets.all(20),
-        onPressed: cart.getQuantity() > 0
+        onPressed: cart.getQuantity(widget.restaurant) > 0
             ? () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -194,7 +199,7 @@ class _OrderCartPreviewState extends State<OrderCartPreview> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              cart.getQuantity().toString(),
+              cart.getQuantity(widget.restaurant).toString(),
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
@@ -204,7 +209,7 @@ class _OrderCartPreviewState extends State<OrderCartPreview> {
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             Text(
-              "\$${cart.getTotal().toString()}",
+              "\$${cart.getTotal(widget.restaurant).toString()}",
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),

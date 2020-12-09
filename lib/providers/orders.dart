@@ -1,4 +1,39 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'restaurants.dart';
+import 'package:flutter/foundation.dart';
+import '../utils.dart';
+import '../constants.dart';
+
+class Orders extends ChangeNotifier {
+  Future<void> createOrder({
+    @required Restaurant restaurant,
+    @required List<OrderItem> orderItems,
+    @required double subtotal,
+    @required double total,
+    @required bool payWithCash,
+  }) async {
+    try {
+      final String apiUrl = "${Constants.server}/orders/";
+      String token = await FirebaseAuth.instance.currentUser.getIdToken();
+
+      Map<String, dynamic> body = {
+        'restaurant_input': restaurant.id,
+        'total': total,
+        'subtotal': subtotal,
+        'payWithCash': payWithCash,
+        'orderitem_set': [
+          for (OrderItem orderItem in orderItems) orderItem.toJson()
+        ],
+      };
+      print(body);
+      final response = await apiPost(apiUrl, body, requestApiHeaders(token));
+      print(response);
+    } catch (error) {
+      throw error;
+    }
+  }
+}
 
 class Order {
   int id;
@@ -65,7 +100,7 @@ class Order {
 }
 
 class OrderItem {
-  int id;
+  Restaurant restaurant;
   List<OrderItemIngredient> ingredients;
   String name;
   int quantity;
@@ -73,7 +108,7 @@ class OrderItem {
   String price;
 
   OrderItem(
-      {this.id,
+      {@required this.restaurant,
       this.ingredients,
       this.name,
       this.quantity,
@@ -81,7 +116,6 @@ class OrderItem {
       this.price});
 
   OrderItem.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
     if (json['selectedingredients_set'] != null) {
       ingredients = new List<OrderItemIngredient>();
       json['selectedingredients_set'].forEach((v) {
@@ -96,7 +130,6 @@ class OrderItem {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
     if (this.ingredients != null) {
       data['selectedingredients_set'] =
           this.ingredients.map((v) => v.toJson()).toList();

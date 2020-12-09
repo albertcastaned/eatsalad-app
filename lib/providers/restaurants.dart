@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_place/google_place.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
@@ -131,6 +130,7 @@ class Schedule {
 
 class RestaurantProvider extends ChangeNotifier {
   List<Restaurant> restaurants = new List<Restaurant>();
+  Restaurant selectedRestaurant;
 
   Future<void> fetchRestaurants() async {
     try {
@@ -148,15 +148,16 @@ class RestaurantProvider extends ChangeNotifier {
 
       restaurants =
           (response as List).map((item) => Restaurant.fromJson(item)).toList();
-
-      for (Restaurant restaurant in restaurants) {
-        double distance = distanceBetweenPoints(
-          restaurant.latitude,
-          restaurant.longitude,
-          double.parse(latitude),
-          double.parse(longitude),
-        );
-        restaurant.outOfRange = distance > restaurant.areaCoverage;
+      if (longitude != null && latitude != null) {
+        for (Restaurant restaurant in restaurants) {
+          double distance = distanceBetweenPoints(
+            restaurant.latitude,
+            restaurant.longitude,
+            double.parse(latitude),
+            double.parse(longitude),
+          );
+          restaurant.outOfRange = distance > restaurant.areaCoverage;
+        }
       }
       notifyListeners();
       return restaurants;

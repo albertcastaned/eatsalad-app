@@ -1,3 +1,5 @@
+import 'package:EatSalad/screens/AddCardScreen.dart';
+import 'package:EatSalad/screens/CardListScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -65,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
               RaisedButton(
                 child: Text('Cerrar sesion'),
                 onPressed: logout,
-              )
+              ),
             ],
           ),
         ),
@@ -86,6 +88,8 @@ class RestaurantCard extends StatelessWidget {
       child: InkWell(
         onTap: available
             ? () {
+                Provider.of<RestaurantProvider>(context, listen: false)
+                    .selectedRestaurant = restaurant;
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => ItemsScreen(

@@ -29,50 +29,52 @@ class LoginScreen extends StatelessWidget {
     }
 
     return AppBody(
-      child: Center(
-        child: AppCard(
-          child: Padding(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image(image: AssetImage('assets/logo.jpeg')),
-                LoginForm(),
-                Container(
-                  child: Wrap(
-                    children: <Widget>[
-                      Text(
-                        '¿No tienes cuenta? ',
-                        style: TextStyle(
-                          fontSize: 11,
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () {
-                          Navigator.of(context)
-                              .pushNamed(RegisterScreen.routeName);
-                        },
-                        child: Text(
-                          'Regístrate aquí',
+      child: SingleChildScrollView(
+        child: Center(
+          child: AppCard(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Image(image: AssetImage('assets/logo.jpeg')),
+                  LoginForm(),
+                  Container(
+                    child: Wrap(
+                      children: <Widget>[
+                        Text(
+                          '¿No tienes cuenta? ',
                           style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            decoration: TextDecoration.underline,
                             fontSize: 11,
                           ),
                         ),
-                      ),
-                    ],
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context)
+                                .pushNamed(RegisterScreen.routeName);
+                          },
+                          child: Text(
+                            'Regístrate aquí',
+                            style: TextStyle(
+                              color: Theme.of(context).accentColor,
+                              decoration: TextDecoration.underline,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Container(
-                  child: RaisedButton(
-                    child: Text('Iniciar con Google'),
-                    onPressed: () => _signInWithGoogle(),
-                  ),
-                )
-              ],
+                  Container(
+                    child: RaisedButton(
+                      child: Text('Iniciar con Google'),
+                      onPressed: () => _signInWithGoogle(),
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),
@@ -99,8 +101,9 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   void initState() {
-    _emailController.text = "albertcastaned@gmail.com";
-    _passwordController.text = "blaster64";
+    //TODO: Remove this placeholder
+    _emailController.text = "test5@gmail.com";
+    _passwordController.text = "Blaster64\$";
 
     super.initState();
   }

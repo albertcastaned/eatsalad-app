@@ -9,6 +9,14 @@ class Constants {
       return "http://${DotEnv().env['HOST']}";
   }
 
+  static get stripeSecretKey {
+    return DotEnv().env['STRIPE_SECRET_KEY'];
+  }
+
+  static get stripePublicKey {
+    return DotEnv().env['STRIPE_KEY'];
+  }
+
   static get googleApiKey {
     return DotEnv().env['GOOGLE_API_KEY'];
   }

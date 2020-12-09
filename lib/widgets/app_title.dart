@@ -5,11 +5,14 @@ class AppTitle extends StatelessWidget {
   AppTitle({@required this.text});
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 23,
-        fontWeight: FontWeight.w600,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 20),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 23,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:EatSalad/providers/restaurants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -340,7 +341,7 @@ class _IngredientsGroupState extends State<IngredientsGroup> {
                         widget.amenities.amenity.ingredients[index].price) >
                     0)
                   Text(
-                    "+ ${widget.amenities.amenity.ingredients[index].price}",
+                    "+ \$${widget.amenities.amenity.ingredients[index].price}",
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -482,13 +483,19 @@ class ItemSetupAddToCartState extends State<ItemSetupAddToCart> {
                 });
               }
               final orderItem = OrderItem(
+                restaurant:
+                    Provider.of<RestaurantProvider>(context, listen: false)
+                        .selectedRestaurant,
                 name: widget.item.name,
                 quantity: _quantity,
                 notes: notesTextController.text,
                 price: _price.toString(),
                 ingredients: orderItemIngredients,
               );
-              Provider.of<Cart>(context, listen: false).addToCart(orderItem);
+              Provider.of<Cart>(context, listen: false).addToCart(
+                  Provider.of<RestaurantProvider>(context, listen: false)
+                      .selectedRestaurant,
+                  orderItem);
               Navigator.of(context).pop();
             }
           : null,
