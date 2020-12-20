@@ -1,16 +1,18 @@
-import 'package:EatSalad/providers/address.dart';
-import 'package:EatSalad/providers/auth.dart';
-import 'package:EatSalad/providers/payment_methods.dart';
-import 'package:EatSalad/screens/CardListScreen.dart';
-import 'package:EatSalad/utils.dart';
-import 'package:EatSalad/widgets/app_title.dart';
-import 'package:EatSalad/widgets/content_loader.dart';
+import 'package:EatSalad/utils/card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../widgets/app_body.dart';
-import '../providers/restaurants.dart';
+
+import '../providers/address.dart';
+import '../providers/auth.dart';
 import '../providers/cart.dart';
 import '../providers/orders.dart';
+import '../providers/payment_methods.dart';
+import '../providers/restaurants.dart';
+import '../widgets/app_body.dart';
+import '../widgets/app_title.dart';
+import '../widgets/content_loader.dart';
+import 'card_list_screen.dart';
+import '../utils/string_utils.dart';
 
 class CartScreen extends StatelessWidget {
   static const String routeName = '/cart';
@@ -92,12 +94,12 @@ class SelectedPaymentMethod extends StatefulWidget {
 class _SelectedPaymentMethodState extends State<SelectedPaymentMethod> {
   Future<void> setFuture() async {
     try {
-      Profile profile =
+      final profile =
           await Provider.of<Auth>(context, listen: false).fetchMyProfile();
       await Provider.of<PaymentMethods>(context, listen: false)
           .fetchPaymentMethods(profile.stripeCustomerId);
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 
@@ -128,7 +130,9 @@ class _SelectedPaymentMethodState extends State<SelectedPaymentMethod> {
                               size: 40,
                               color: Theme.of(context).primaryColor,
                             )
-                          : getCardTypeIcon(data.selectedMethod.typeCard),
+                          : CardUtils.getCardTypeIcon(
+                              data.selectedMethod.typeCard,
+                            ),
                       SizedBox(
                         width: 40,
                       ),
@@ -235,6 +239,7 @@ class ConfirmOrderButton extends StatelessWidget {
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             Text(
+              // ignore: lines_longer_than_80_chars
               "\$${(cart.getTotal(restaurant) + double.parse(restaurant.deliveryFee)).toStringAsFixed(2)}",
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -277,6 +282,7 @@ class CartTotal extends StatelessWidget {
               PriceRow(
                 title: "Total",
                 value:
+                    // ignore: lines_longer_than_80_chars
                     "\$${(cart.getTotal(restaurant) + double.parse(restaurant.deliveryFee)).toStringAsFixed(2)}",
               ),
             ],

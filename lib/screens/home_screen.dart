@@ -1,5 +1,3 @@
-import 'package:EatSalad/screens/AddCardScreen.dart';
-import 'package:EatSalad/screens/CardListScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,8 +6,8 @@ import '../providers/restaurants.dart';
 import '../widgets/app_body.dart';
 import '../widgets/app_card.dart';
 import '../widgets/content_loader.dart';
-import './AddressSetupScreen.dart';
-import './ItemsScreen.dart';
+import 'address_setup_screen.dart';
+import 'items_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -178,7 +176,9 @@ class RestaurantCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        "Horario: ${restaurant.schedule.startTime} - ${restaurant.schedule.endTime}",
+                        "Horario: "
+                        // ignore: lines_longer_than_80_chars
+                        "${restaurant.schedule.startTime} - ${restaurant.schedule.endTime}",
                         textAlign: TextAlign.left,
                         style: TextStyle(
                           fontWeight: FontWeight.w300,

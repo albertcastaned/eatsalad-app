@@ -1,20 +1,19 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../services/stripe.dart';
-import 'package:flutter/material.dart';
+import '../services/stripe.dart' as stripe;
 
 class PaymentMethods extends ChangeNotifier {
   PaymentMethod selectedMethod;
   List<PaymentMethod> paymentMethods;
   Future<void> fetchPaymentMethods(String stripeId) async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       final selectedPaymentMethod = prefs.getString("selected_payment_method");
 
-      List<PaymentMethod> fetchedCards = new List<PaymentMethod>();
+      final fetchedCards = <PaymentMethod>[];
 
-      PaymentMethod cashPaymentMethod = new PaymentMethod(
+      final cashPaymentMethod = PaymentMethod(
         typeCard: 'cash',
         cardHolderName: '',
         isCash: true,
@@ -24,8 +23,7 @@ class PaymentMethods extends ChangeNotifier {
       );
       fetchedCards.add(cashPaymentMethod);
 
-      final paymentMethodsData =
-          await StripeService.getPaymentMethods(stripeId);
+      final paymentMethodsData = await stripe.getPaymentMethods(stripeId);
 
       // No payment method card set
       if (paymentMethodsData.isEmpty) {
@@ -36,11 +34,10 @@ class PaymentMethods extends ChangeNotifier {
         cashPaymentMethod.selected = true;
         selectedMethod = cashPaymentMethod;
       }
-
-      paymentMethodsData.forEach((card) {
-        String month = card['card']['exp_month'].toString();
-        String year = card['card']['exp_year'].toString();
-        String expirydate = month + '/' + year;
+      for (var card in paymentMethodsData) {
+        final month = card['card']['exp_month'].toString();
+        final year = card['card']['exp_year'].toString();
+        final expirydate = '$month/$year';
 
         final newCard = PaymentMethod(
           cardNumber: card['card']['last4'],
@@ -55,11 +52,11 @@ class PaymentMethods extends ChangeNotifier {
         }
 
         if (!fetchedCards.contains(newCard)) fetchedCards.add(newCard);
-      });
+      }
 
       paymentMethods = fetchedCards;
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 
@@ -69,10 +66,10 @@ class PaymentMethods extends ChangeNotifier {
   }
 
   Future<void> setSelected(PaymentMethod newMethod) async {
-    for (PaymentMethod method in paymentMethods) {
+    for (var method in paymentMethods) {
       method.selected = method == newMethod;
       if (method == newMethod) {
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
+        final prefs = await SharedPreferences.getInstance();
         prefs.setString("selected_payment_method", newMethod.id);
         method.selected = true;
         selectedMethod = method;
@@ -110,12 +107,4 @@ class PaymentMethod {
         ? "Cash"
         : "Card Number: $cardNumber, Card Holder Name: $cardHolderName";
   }
-
-  @override
-  bool operator ==(covariant PaymentMethod other) {
-    return this.cardNumber == other.cardNumber;
-  }
-
-  @override
-  int get hashCode => int.parse(cardNumber);
 }

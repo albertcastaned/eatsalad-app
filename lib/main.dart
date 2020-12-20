@@ -1,9 +1,4 @@
 // Packages
-import 'package:EatSalad/providers/address.dart';
-import 'package:EatSalad/providers/cart.dart';
-import 'package:EatSalad/providers/orders.dart';
-import 'package:EatSalad/providers/payment_methods.dart';
-import 'package:EatSalad/providers/restaurants.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,9 +11,14 @@ import './constants.dart';
 import './providers/auth.dart';
 import './providers/items.dart';
 import './routes.dart';
+import 'providers/address.dart';
+import 'providers/cart.dart';
+import 'providers/orders.dart';
+import 'providers/payment_methods.dart';
+import 'providers/restaurants.dart';
 // Screens
-import './screens/HomeScreen.dart';
-import './screens/LoginScreen.dart';
+import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 
 Future main() async {
   await DotEnv().load('.env');
@@ -27,7 +27,7 @@ Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitDown, DeviceOrientation.portraitUp]);
-  print("Server: ${Constants.server}");
+  print("Server: $server");
   runApp(EatApp());
 }
 

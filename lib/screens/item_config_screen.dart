@@ -1,20 +1,19 @@
-import 'package:EatSalad/providers/restaurants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../widgets/app_body.dart';
-import '../widgets/counter.dart';
 
 import '../providers/cart.dart';
 import '../providers/items.dart';
 import '../providers/orders.dart';
+import '../providers/restaurants.dart';
+import '../widgets/app_body.dart';
+import '../widgets/counter.dart';
 
-Map<Ingredient, int> _selectedIngredients = new Map<Ingredient, int>();
-Map<Amenities, bool> _validGroups = new Map<Amenities, bool>();
+Map<Ingredient, int> _selectedIngredients = <Ingredient, int>{};
+Map<Amenities, bool> _validGroups = <Amenities, bool>{};
 int _quantity = 1;
 double _price = 0.00;
 bool _isValid = false;
-final cartKey = new GlobalKey<ItemSetupAddToCartState>();
+final cartKey = GlobalKey<ItemSetupAddToCartState>();
 final notesTextController = TextEditingController();
 
 class ItemSetup extends StatefulWidget {
@@ -28,16 +27,16 @@ class ItemSetup extends StatefulWidget {
 class _ItemSetupState extends State<ItemSetup> {
   @override
   void initState() {
-    _selectedIngredients = new Map<Ingredient, int>();
-    _validGroups = new Map<Amenities, bool>();
+    _selectedIngredients = <Ingredient, int>{};
+    _validGroups = <Amenities, bool>{};
 
-    for (Amenities amenities in widget.item.amenities) {
+    for (var amenities in widget.item.amenities) {
       if (amenities.obligatory) {
         _validGroups[amenities] = false;
       } else if (amenities.minimumSelect == 0) {
         _validGroups[amenities] = true;
       }
-      for (Ingredient ingredient in amenities.amenity.ingredients) {
+      for (var ingredient in amenities.amenity.ingredients) {
         _selectedIngredients[ingredient] = 0;
       }
     }
@@ -357,9 +356,10 @@ class _IngredientsGroupState extends State<IngredientsGroup> {
                     onChanged: (value) {
                       setState(() {
                         sum = 1;
-                        if (radioChosen != null)
+                        if (radioChosen != null) {
                           _selectedIngredients[widget
                               .amenities.amenity.ingredients[radioChosen]] = 0;
+                        }
                         _selectedIngredients[
                             widget.amenities.amenity.ingredients[value]] = 1;
                         radioChosen = value;
@@ -444,7 +444,7 @@ class ItemSetupAddToCartState extends State<ItemSetupAddToCart> {
   void updateTotal() {
     setState(() {
       print("Price calculated");
-      double ingredientSum = 0.00;
+      var ingredientSum = 0.00;
       _selectedIngredients.forEach(
         (key, value) {
           ingredientSum += double.parse(key.price) * value;
@@ -466,8 +466,7 @@ class ItemSetupAddToCartState extends State<ItemSetupAddToCart> {
       padding: EdgeInsets.all(20),
       onPressed: _isValid
           ? () {
-              List<OrderItemIngredient> orderItemIngredients =
-                  new List<OrderItemIngredient>();
+              final orderItemIngredients = <OrderItemIngredient>[];
 
               if (_selectedIngredients != null) {
                 _selectedIngredients.forEach((key, value) {

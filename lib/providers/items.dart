@@ -16,9 +16,9 @@ class Category {
   Category.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     if (json['item_set'] != null) {
-      items = new List<Item>();
+      items = <Item>[];
       json['item_set'].forEach((v) {
-        items.add(new Item.fromJson(v));
+        items.add(Item.fromJson(v));
       });
     }
     name = json['name'];
@@ -27,14 +27,14 @@ class Category {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.items != null) {
-      data['item_set'] = this.items.map((v) => v.toJson()).toList();
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    if (items != null) {
+      data['item_set'] = items.map((v) => v.toJson()).toList();
     }
-    data['name'] = this.name;
-    data['image'] = this.image;
-    data['active'] = this.active;
+    data['name'] = name;
+    data['image'] = image;
+    data['active'] = active;
     return data;
   }
 }
@@ -64,9 +64,9 @@ class Item {
   Item.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     if (json['amenities'] != null) {
-      amenities = new List<Amenities>();
+      amenities = <Amenities>[];
       json['amenities'].forEach((v) {
-        amenities.add(new Amenities.fromJson(v));
+        amenities.add(Amenities.fromJson(v));
       });
     }
     name = json['name'];
@@ -79,18 +79,18 @@ class Item {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.amenities != null) {
-      data['amenities'] = this.amenities.map((v) => v.toJson()).toList();
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    if (amenities != null) {
+      data['amenities'] = amenities.map((v) => v.toJson()).toList();
     }
-    data['name'] = this.name;
-    data['image'] = this.image;
-    data['price'] = this.price;
-    data['description'] = this.description;
-    data['active'] = this.active;
-    data['restaurant'] = this.restaurant;
-    data['category'] = this.category;
+    data['name'] = name;
+    data['image'] = image;
+    data['price'] = price;
+    data['description'] = description;
+    data['active'] = active;
+    data['restaurant'] = restaurant;
+    data['category'] = category;
     return data;
   }
 }
@@ -115,17 +115,17 @@ class Amenities {
     maximumSelect = json['maximum_select'];
     obligatory = json['obligatory'];
     amenity =
-        json['amenity'] != null ? new Amenity.fromJson(json['amenity']) : null;
+        json['amenity'] != null ? Amenity.fromJson(json['amenity']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['field_type'] = this.fieldType;
-    data['minimum_select'] = this.minimumSelect;
-    data['maximum_select'] = this.maximumSelect;
-    data['obligatory'] = this.obligatory;
-    if (this.amenity != null) {
-      data['amenity'] = this.amenity.toJson();
+    final data = <String, dynamic>{};
+    data['field_type'] = fieldType;
+    data['minimum_select'] = minimumSelect;
+    data['maximum_select'] = maximumSelect;
+    data['obligatory'] = obligatory;
+    if (amenity != null) {
+      data['amenity'] = amenity.toJson();
     }
     return data;
   }
@@ -148,9 +148,9 @@ class Amenity {
   Amenity.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     if (json['ingredient_set'] != null) {
-      ingredients = new List<Ingredient>();
+      ingredients = <Ingredient>[];
       json['ingredient_set'].forEach((v) {
-        ingredients.add(new Ingredient.fromJson(v));
+        ingredients.add(Ingredient.fromJson(v));
       });
     }
     name = json['name'];
@@ -159,14 +159,14 @@ class Amenity {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.ingredients != null) {
-      data['ingredient_set'] = this.ingredients.map((v) => v.toJson()).toList();
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    if (ingredients != null) {
+      data['ingredient_set'] = ingredients.map((v) => v.toJson()).toList();
     }
-    data['name'] = this.name;
-    data['active'] = this.active;
-    data['restaurant'] = this.restaurant;
+    data['name'] = name;
+    data['active'] = active;
+    data['restaurant'] = restaurant;
     return data;
   }
 }
@@ -185,10 +185,10 @@ class Ingredient {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['price'] = this.price;
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['price'] = price;
     return data;
   }
 
@@ -203,14 +203,14 @@ class CategoriesProvider extends ChangeNotifier {
 
   Future<void> fetchCategories(int restaurant) async {
     try {
-      final apiUrl = "${Constants.server}/categories/?restaurant=$restaurant";
-      String token = await FirebaseAuth.instance.currentUser.getIdToken();
+      final apiUrl = "$server/categories/?restaurant=$restaurant";
+      var token = await FirebaseAuth.instance.currentUser.getIdToken();
       final response = await apiGet(apiUrl, requestApiHeaders(token))
-          .timeout(Duration(seconds: Constants.timeoutSeconds));
+          .timeout(Duration(seconds: timeoutSeconds));
 
       categories =
           (response as List).map((item) => Category.fromJson(item)).toList();
-      categories = categories.where((i) => i.items.length > 0).toList();
+      categories = categories.where((i) => i.items.isNotEmpty).toList();
       return categories;
     } catch (error) {
       print(error);

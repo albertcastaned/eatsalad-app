@@ -1,16 +1,13 @@
-import 'CartScreen.dart';
-
-import '../providers/restaurants.dart';
-import '../providers/items.dart';
-import '../providers/cart.dart';
-
-import '../widgets/app_body.dart';
-import '../widgets/content_loader.dart';
-
-import '../screens/ItemConfigScreen.dart';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/cart.dart';
+import '../providers/items.dart';
+import '../providers/restaurants.dart';
+import '../widgets/app_body.dart';
+import '../widgets/content_loader.dart';
+import 'cart_screen.dart';
+import 'item_config_screen.dart';
 
 class ItemsScreen extends StatefulWidget {
   static const routeName = '/items';
@@ -108,9 +105,9 @@ class ItemSection extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          new MaterialPageRoute(
-            builder: (BuildContext context) {
-              return new ItemSetup(item: item);
+          MaterialPageRoute(
+            builder: (context) {
+              return ItemSetup(item: item);
             },
             fullscreenDialog: true,
           ),

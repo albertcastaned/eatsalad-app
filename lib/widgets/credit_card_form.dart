@@ -1,13 +1,14 @@
-import 'package:EatSalad/providers/payment_methods.dart';
-import 'package:EatSalad/services/stripe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_credit_card/flutter_credit_card.dart';
-
 import 'package:flutter_credit_card/credit_card_model.dart';
+import 'package:flutter_credit_card/flutter_credit_card.dart';
 import 'package:provider/provider.dart';
+
+import '../constants.dart';
 import '../providers/auth.dart';
+import '../services/stripe.dart' as stripe;
 import '../utils.dart';
+import '../utils/card_utils.dart';
 
 class CustomCreditCardForm extends StatefulWidget {
   const CustomCreditCardForm({
@@ -36,38 +37,30 @@ class CustomCreditCardForm extends StatefulWidget {
 }
 
 class _CreditCardFormState extends State<CustomCreditCardForm> {
-  static const _errorMessages = {
-    'empty': 'Este campo no puede estar vacio.',
-    'invalid_card': 'Numero de tarjeta invalida.',
-    'transaction_error':
-        'Ocurrio un error al intentar de registrar la tarjeta. Valida los datos correctamente.',
-    'connection_error': 'Ocurrio un error de conexion.'
-  };
-
   final _formKey = GlobalKey<FormState>();
 
   Future<void> saveCard(BuildContext context) async {
     try {
-      Profile profile =
+      final profile =
           await Provider.of<Auth>(context, listen: false).fetchMyProfile();
-      CreditCardModel card = new CreditCardModel(
+      final card = CreditCardModel(
           cardNumber, expiryDate, cardHolderName, cvvCode, true);
-      final response = await StripeService.addNewCard(
+      final response = await stripe.addNewCard(
         context: context,
         card: card,
         customerId: profile.stripeCustomerId,
       );
       if (!response.success) {
-        buildError(context, _errorMessages['transaction_error']);
+        buildError(context, Errors.stripeTransactionError);
       } else {
         await showSuccesfulDialog('Tarjeta aprobada', context);
         Navigator.pop(context, true);
       }
       print(response.message);
     } catch (error) {
-      buildError(context, _errorMessages['connection_error']);
+      buildError(context, Errors.connectionError);
 
-      throw error;
+      rethrow;
     }
   }
 
@@ -185,10 +178,10 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
                 textInputAction: TextInputAction.next,
                 validator: (value) {
                   if (value.isEmpty) {
-                    return _errorMessages['empty'];
+                    return Errors.emptyField;
                   }
-                  if (!CardUtils.isCreditCard(value)) {
-                    return _errorMessages['invalid_card'];
+                  if (!CardUtils.validCreditCard(value)) {
+                    return Errors.invalidPaymentMethod;
                   }
 
                   return null;
@@ -213,9 +206,9 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
                 textInputAction: TextInputAction.next,
                 validator: (value) {
                   if (value.isEmpty) {
-                    return _errorMessages['empty'];
+                    return Errors.emptyField;
                   }
-                  return CardUtils.validateDate(value);
+                  return CardUtils.validDate(value);
                 },
               ),
             ),
@@ -238,11 +231,13 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
                 textInputAction: TextInputAction.done,
                 validator: (value) {
                   if (value.isEmpty) {
-                    return _errorMessages['empty'];
+                    return Errors.emptyField;
                   }
-                  return CardUtils.validateCVV(value);
+                  return CardUtils.validCVV(value)
+                      ? null
+                      : "Este CVV es invalido.";
                 },
-                onChanged: (String text) {
+                onChanged: (text) {
                   setState(() {
                     cvvCode = text;
                   });
@@ -266,7 +261,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
                 textInputAction: TextInputAction.next,
                 validator: (value) {
                   if (value.isEmpty) {
-                    return _errorMessages['empty'];
+                    return Errors.emptyField;
                   }
                   return null;
                 },

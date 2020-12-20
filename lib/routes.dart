@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'screens/AddressSetupScreen.dart';
-import 'screens/CartScreen.dart';
-import 'screens/ItemsScreen.dart';
-import 'screens/RegisterScreen.dart';
-import 'screens/AddCardScreen.dart';
-import 'screens/CardListScreen.dart';
+import 'screens/add_card_screen.dart';
+import 'screens/address_setup_screen.dart';
+import 'screens/card_list_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/items_screen.dart';
+import 'screens/register_screen.dart';
 
 // Screens
 

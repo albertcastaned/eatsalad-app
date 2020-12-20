@@ -4,14 +4,13 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:progress_dialog/progress_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../exceptions/authentication_exception.dart';
 import '../utils.dart';
 
-class Auth with ChangeNotifier {
+class Auth extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final _googleSignIn = GoogleSignIn();
@@ -19,25 +18,25 @@ class Auth with ChangeNotifier {
   bool get isLoggedIn => _auth.currentUser != null;
 
   Future<void> _authenticate(UserCredential userCredential) async {
-    final apiUrl = "${Constants.server}/profile/";
+    final apiUrl = "$server/profile/";
 
     try {
-      String idToken = await userCredential.user.getIdToken();
+      final idToken = await userCredential.user.getIdToken();
 
       final response = await apiGet(apiUrl, requestApiHeaders(idToken));
 
       // Save profile as json in shared preferences
       final prefs = await SharedPreferences.getInstance();
-      final Profile myProfile = Profile.fromJson(response['profile']);
+      final myProfile = Profile.fromJson(response['profile']);
       prefs.setString("profile", jsonEncode(myProfile));
       print(jsonEncode(myProfile));
       print('Api auth succeded');
       notifyListeners();
     } on TimeoutException catch (e) {
       print(e);
-      throw new TimeoutException('Time out');
+      throw TimeoutException('Time out');
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 
@@ -50,17 +49,16 @@ class Auth with ChangeNotifier {
 
   Future<void> signUpEmailPassword(
       BuildContext context, String email, String password) async {
-    ProgressDialog loadingDialog =
-        buildLoadingDialog(context, 'Creando usuario...');
+    final loadingDialog = buildLoadingDialog(context, 'Creando usuario...');
     await loadingDialog.show();
 
     try {
-      final User user = (await _auth.createUserWithEmailAndPassword(
+      final user = (await _auth.createUserWithEmailAndPassword(
               email: email, password: password))
           .user;
       assert(user != null);
     } catch (error) {
-      throw error;
+      rethrow;
     } finally {
       loadingDialog.hide();
     }
@@ -68,11 +66,11 @@ class Auth with ChangeNotifier {
 
   Future<void> signInWithEmail(
       BuildContext context, String email, String password) async {
-    ProgressDialog dialog = buildLoadingDialog(context, 'Iniciando sesión...');
+    var dialog = buildLoadingDialog(context, 'Iniciando sesión...');
     await dialog.show();
 
     try {
-      final UserCredential authResult = await _auth.signInWithEmailAndPassword(
+      final authResult = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -83,7 +81,7 @@ class Auth with ChangeNotifier {
 
       await _authenticate(authResult);
     } catch (error) {
-      throw error;
+      rethrow;
     } finally {
       dialog.hide();
     }
@@ -105,22 +103,21 @@ class Auth with ChangeNotifier {
       accessToken: googleSignInAuthentication.accessToken,
     );
 
-    final UserCredential authResult =
-        await _auth.signInWithCredential(credential);
-    final User user = authResult.user;
+    final authResult = await _auth.signInWithCredential(credential);
+    final user = authResult.user;
     assert(!user.isAnonymous);
 
-    final User currentUser = _auth.currentUser;
+    final currentUser = _auth.currentUser;
     assert(user.uid == currentUser.uid);
     print("Firebase auth succeded");
 
-    ProgressDialog dialog = buildLoadingDialog(context, 'Iniciando sesión...');
+    var dialog = buildLoadingDialog(context, 'Iniciando sesión...');
     await dialog.show();
 
     try {
       await _authenticate(authResult);
     } catch (error) {
-      throw error;
+      rethrow;
     } finally {
       dialog.hide();
     }
@@ -132,17 +129,17 @@ class Auth with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       print(prefs.getString("profile"));
-      final String profile = prefs.getString("profile");
+      final profile = prefs.getString("profile");
       if (profile == null) {
         throw Exception('Profile not set');
       } else {
         Map<String, dynamic> profileMap;
         profileMap = jsonDecode(profile) as Map<String, dynamic>;
-        Profile myProfile = Profile.fromJson(profileMap);
+        var myProfile = Profile.fromJson(profileMap);
         return myProfile;
       }
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 }
@@ -170,12 +167,12 @@ class Profile {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['phone_number'] = this.phoneNumber;
-    data['first_name'] = this.firstName;
-    data['last_name'] = this.lastName;
-    data['stripe_customer_id'] = this.stripeCustomerId;
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    data['phone_number'] = phoneNumber;
+    data['first_name'] = firstName;
+    data['last_name'] = lastName;
+    data['stripe_customer_id'] = stripeCustomerId;
     return data;
   }
 

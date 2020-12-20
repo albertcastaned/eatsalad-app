@@ -1,15 +1,15 @@
-import 'package:EatSalad/providers/restaurants.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_place/google_place.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../widgets/app_title.dart';
 import '../constants.dart';
+import '../providers/restaurants.dart';
 import '../widgets/app_body.dart';
+import '../widgets/app_title.dart';
 import '../widgets/content_loader.dart';
 
-var googlePlace = GooglePlace(Constants.googleApiKey);
+var googlePlace = GooglePlace(googleApiKey);
 
 class AddressSetupScreen extends StatefulWidget {
   static const routeName = '/address';
@@ -36,10 +36,10 @@ class _AddressSetupScreenState extends State<AddressSetupScreen> {
   Widget selectedAddress;
   Future<void> attemptLoadPrefs() async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      String longitude = prefs.getString("longitude");
-      String latitude = prefs.getString("latitude");
-      String direction = prefs.getString("direction");
+      final prefs = await SharedPreferences.getInstance();
+      final longitude = prefs.getString("longitude");
+      final latitude = prefs.getString("latitude");
+      final direction = prefs.getString("direction");
 
       if (longitude == null || latitude == null || direction == null) return;
       selectedAddress = LocationCard(
@@ -49,7 +49,7 @@ class _AddressSetupScreenState extends State<AddressSetupScreen> {
         selected: true,
       );
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 
@@ -134,7 +134,7 @@ class LocationCard extends StatelessWidget {
   Future<void> saveSelectedCoordinates(
       BuildContext context, String latitude, String longitude) async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       prefs.setString("direction", direction);
       prefs.setString("latitude", latitude);
       prefs.setString("longitude", longitude);
@@ -146,7 +146,7 @@ class LocationCard extends StatelessWidget {
       Provider.of<RestaurantProvider>(context, listen: false)
           .fetchRestaurants();
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 

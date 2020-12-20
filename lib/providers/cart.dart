@@ -1,14 +1,15 @@
-import 'package:EatSalad/providers/restaurants.dart';
 import 'package:flutter/material.dart';
 
 import 'orders.dart';
+import 'restaurants.dart';
 
 class Cart extends ChangeNotifier {
   var itemsMap = <Restaurant, List<OrderItem>>{};
 
   void checkInitMap(Restaurant restaurant) {
-    if (itemsMap[restaurant] == null)
-      itemsMap[restaurant] = new List<OrderItem>();
+    if (itemsMap[restaurant] == null) {
+      itemsMap[restaurant] = <OrderItem>[];
+    }
   }
 
   void addToCart(Restaurant restaurant, OrderItem orderItem) {
@@ -20,20 +21,22 @@ class Cart extends ChangeNotifier {
   double getTotal(Restaurant restaurant) {
     checkInitMap(restaurant);
 
-    double sum = 0.00;
-    itemsMap[restaurant].forEach((element) {
-      sum += double.parse(element.price);
-    });
+    var sum = 0.00;
+
+    for (var item in itemsMap[restaurant]) {
+      sum += double.parse(item.price);
+    }
+
     return sum;
   }
 
   int getQuantity(Restaurant restaurant) {
     checkInitMap(restaurant);
 
-    int quantity = 0;
-    itemsMap[restaurant].forEach((element) {
-      quantity += element.quantity;
-    });
+    var quantity = 0;
+    for (var item in itemsMap[restaurant]) {
+      quantity += item.quantity;
+    }
     return quantity;
   }
 

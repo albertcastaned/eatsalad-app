@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
 
 class Address {
   String direction;
@@ -13,19 +14,19 @@ class Address {
       @required this.longitude});
 }
 
-class SelectedAddress with ChangeNotifier {
+class SelectedAddress extends ChangeNotifier {
   Address selectedAddress;
   Future<void> fetchSelectedAddress() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final String direction = prefs.getString("direction");
-    final String longitude = prefs.getString("longitude");
-    final String latitude = prefs.getString("latitude");
+    final prefs = await SharedPreferences.getInstance();
+    final direction = prefs.getString("direction");
+    final longitude = prefs.getString("longitude");
+    final latitude = prefs.getString("latitude");
 
     if (direction == null || longitude == null || latitude == null) {
       print("Address not set");
       return;
     }
-    selectedAddress = new Address(
+    selectedAddress = Address(
         direction: direction, longitude: longitude, latitude: latitude);
 
     notifyListeners();

@@ -9,7 +9,7 @@ import '../providers/auth.dart';
 import '../utils.dart';
 import '../widgets/app_body.dart';
 import '../widgets/app_card.dart';
-import 'RegisterScreen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
@@ -22,7 +22,7 @@ class LoginScreen extends StatelessWidget {
             .authenticateWithGoogle(context);
       } on TimeoutException catch (error) {
         print(error);
-        buildError(context, Error.CONNECTION_ERROR);
+        buildError(context, Errors.connectionError);
       } catch (error) {
         print(error);
       }
@@ -70,7 +70,7 @@ class LoginScreen extends StatelessWidget {
                   Container(
                     child: RaisedButton(
                       child: Text('Iniciar con Google'),
-                      onPressed: () => _signInWithGoogle(),
+                      onPressed: _signInWithGoogle,
                     ),
                   )
                 ],
@@ -94,7 +94,7 @@ class _LoginFormState extends State<LoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  Map<String, String> _authData = {
+  final Map<String, String> _authData = {
     'email': '',
     'password': '',
   };
@@ -118,11 +118,11 @@ class _LoginFormState extends State<LoginForm> {
       await Provider.of<Auth>(context, listen: false)
           .signInWithEmail(context, _authData['email'], _authData['password']);
     } on PlatformException catch (error) {
-      final errorMessage = Error.INVALID_ACCOUNT;
+      final errorMessage = Errors.userNotFound;
       print(error);
       buildError(context, errorMessage);
     } catch (error) {
-      final errorMessage = Error.CONNECTION_ERROR;
+      final errorMessage = Errors.connectionError;
       print(error);
       buildError(context, errorMessage, 'Reintentar', _submit);
     }
@@ -143,9 +143,9 @@ class _LoginFormState extends State<LoginForm> {
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value.isEmpty) {
-                return Error.EMPTY_FIELDS;
+                return Errors.emptyField;
               } else if (!value.contains('@')) {
-                return Error.INVALID_EMAIL;
+                return Errors.invalidEmail;
               }
               return null;
             },
@@ -162,7 +162,7 @@ class _LoginFormState extends State<LoginForm> {
             controller: _passwordController,
             validator: (value) {
               if (value.isEmpty) {
-                return Error.EMPTY_FIELDS;
+                return Errors.emptyField;
               }
               return null;
             },

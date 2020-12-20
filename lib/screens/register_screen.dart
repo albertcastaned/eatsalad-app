@@ -20,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  Map<String, String> _authData = {
+  final Map<String, String> _authData = {
     'email': '',
     'password': '',
     'confirmPassword': '',
@@ -36,11 +36,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await Provider.of<Auth>(context, listen: false).signUpEmailPassword(
           context, _authData['email'], _authData['password']);
     } on PlatformException catch (error) {
-      final errorMessage = Error.INVALID_ACCOUNT;
+      final errorMessage = Errors.userNotFound;
       print(error);
       buildError(context, errorMessage);
     } catch (error) {
-      final errorMessage = Error.CONNECTION_ERROR;
+      final errorMessage = Errors.connectionError;
       print(error);
       buildError(context, errorMessage, 'Reintentar', _submit);
     }
@@ -64,9 +64,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value.isEmpty) {
-                  return Error.EMPTY_FIELDS;
+                  return Errors.emptyField;
                 } else if (!value.contains('@')) {
-                  return Error.INVALID_EMAIL;
+                  return Errors.invalidEmail;
                 }
                 return null;
               },
@@ -83,11 +83,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _passwordController,
               validator: (value) {
                 if (value.isEmpty) {
-                  return Error.EMPTY_FIELDS;
+                  return Errors.emptyField;
                 } else if (value != _confirmPasswordController.text) {
-                  return Error.PASSWORD_UNMATCH;
+                  return Errors.passwordUnmatch;
                 } else if (value.length < 6) {
-                  return Error.SHORT_PASSWORD;
+                  return Errors.weakPassword;
                 }
                 return null;
               },
@@ -104,11 +104,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               controller: _confirmPasswordController,
               validator: (value) {
                 if (value.isEmpty) {
-                  return Error.EMPTY_FIELDS;
+                  return Errors.emptyField;
                 } else if (value != _passwordController.text) {
-                  return Error.PASSWORD_UNMATCH;
+                  return Errors.passwordUnmatch;
                 } else if (value.length < 6) {
-                  return Error.SHORT_PASSWORD;
+                  return Errors.weakPassword;
                 }
                 return null;
               },
