@@ -7,12 +7,15 @@ import '../widgets/credit_card_form.dart';
 
 class AddCardScreen extends StatefulWidget {
   static const routeName = "/payment/new";
-
+  final GlobalKey<FormState> formKey;
+  AddCardScreen({this.formKey});
   @override
   _AddCardScreenState createState() => _AddCardScreenState();
 }
 
 class _AddCardScreenState extends State<AddCardScreen> {
+  GlobalKey<FormState> formKey;
+
   String cardNumber = '';
   String expiryDate = '';
   String cardHolderName = 'NOMBRE APELLIDO';
@@ -21,7 +24,8 @@ class _AddCardScreenState extends State<AddCardScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
+    formKey = widget.formKey ?? GlobalKey<FormState>();
+
     cardNumber = '4242 4242 4242 4242';
     expiryDate = '02/22';
     cvvCode = '123';
@@ -33,6 +37,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
   Widget build(BuildContext context) {
     return AppBody(
       isFullScreen: true,
+      title: 'Nuevo metodo de pago',
       child: SingleChildScrollView(
         child: Column(
           children: [
@@ -45,6 +50,7 @@ class _AddCardScreenState extends State<AddCardScreen> {
             ),
             CustomCreditCardForm(
               onCreditCardModelChange: onCreditCardModelChange,
+              formKey: formKey,
             ),
             Container(
               margin: const EdgeInsets.symmetric(vertical: 20),

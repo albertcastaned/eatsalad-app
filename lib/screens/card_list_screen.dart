@@ -6,7 +6,6 @@ import '../providers/payment_methods.dart';
 import '../utils/card_utils.dart';
 import '../utils/string_utils.dart';
 import '../widgets/app_body.dart';
-import '../widgets/app_title.dart';
 import '../widgets/content_loader.dart';
 import 'add_card_screen.dart';
 
@@ -21,8 +20,11 @@ class _CardListScreenState extends State<CardListScreen> {
     try {
       final profile =
           await Provider.of<Auth>(context, listen: false).fetchMyProfile();
-      await Provider.of<PaymentMethods>(context, listen: false)
-          .fetchPaymentMethods(profile.stripeCustomerId);
+      await Provider.of<PaymentMethods>(context, listen: false).fetch(
+        params: {
+          'stripeId': profile.stripeCustomerId,
+        },
+      );
     } catch (error) {
       rethrow;
     }
@@ -38,51 +40,51 @@ class _CardListScreenState extends State<CardListScreen> {
   Widget build(BuildContext context) {
     return AppBody(
       isFullScreen: true,
-      child: SingleChildScrollView(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTitle(
-                text: 'Metodos de pago',
-              ),
-              ContentLoader(
-                future: setFuture(),
-                widget: Consumer<PaymentMethods>(
-                  builder: (ctx, data, child) => Flexible(
-                    child: ListView.separated(
-                      physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      separatorBuilder: (context, intex) => Divider(),
-                      itemCount: data.paymentMethods.length,
-                      itemBuilder: (context, index) =>
-                          !data.paymentMethods[index].isCash
-                              ? PaymentTile(
-                                  paymentMethod: data.paymentMethods[index],
-                                )
-                              : CashPaymentTile(
-                                  cashPaymentMethod: data.paymentMethods[index],
-                                ),
+      title: 'Metodos de pago',
+      child: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ContentLoader(
+                  future: setFuture(),
+                  widget: Consumer<PaymentMethods>(
+                    builder: (ctx, data, child) => Flexible(
+                      child: ListView.separated(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        separatorBuilder: (context, intex) => Divider(),
+                        itemCount: data.items.length,
+                        itemBuilder: (context, index) =>
+                            !data.items[index].isCash
+                                ? PaymentTile(
+                                    paymentMethod: data.items[index],
+                                  )
+                                : CashPaymentTile(
+                                    cashPaymentMethod: data.items[index],
+                                  ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                margin:
-                    const EdgeInsets.symmetric(vertical: 30, horizontal: 50),
-                width: double.infinity,
-                child: RaisedButton(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  textColor: Colors.white,
-                  onPressed: () =>
-                      Navigator.of(context).pushNamed(AddCardScreen.routeName),
-                  child: Text(
-                    'Agregar nuevo metodo de pago',
+                Container(
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 30, horizontal: 50),
+                  width: double.infinity,
+                  child: RaisedButton(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    textColor: Colors.white,
+                    onPressed: () => Navigator.of(context)
+                        .pushNamed(AddCardScreen.routeName),
+                    child: Text(
+                      'Agregar nuevo metodo de pago',
+                    ),
                   ),
-                ),
-              )
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

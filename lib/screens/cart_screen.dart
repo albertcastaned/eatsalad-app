@@ -1,4 +1,3 @@
-import 'package:EatSalad/utils/card_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -8,11 +7,11 @@ import '../providers/cart.dart';
 import '../providers/orders.dart';
 import '../providers/payment_methods.dart';
 import '../providers/restaurants.dart';
+import '../utils/card_utils.dart';
+import '../utils/string_utils.dart';
 import '../widgets/app_body.dart';
-import '../widgets/app_title.dart';
 import '../widgets/content_loader.dart';
 import 'card_list_screen.dart';
-import '../utils/string_utils.dart';
 
 class CartScreen extends StatelessWidget {
   static const String routeName = '/cart';
@@ -23,6 +22,7 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppBody(
         isFullScreen: true,
+        title: 'Resumen de pedido',
         child: Stack(
           children: [
             SingleChildScrollView(
@@ -31,10 +31,6 @@ class CartScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 15),
-                      child: AppTitle(text: restaurant.name),
-                    ),
                     Divider(),
                     OrderAddress(),
                     Divider(),
@@ -96,8 +92,9 @@ class _SelectedPaymentMethodState extends State<SelectedPaymentMethod> {
     try {
       final profile =
           await Provider.of<Auth>(context, listen: false).fetchMyProfile();
-      await Provider.of<PaymentMethods>(context, listen: false)
-          .fetchPaymentMethods(profile.stripeCustomerId);
+      await Provider.of<PaymentMethods>(context, listen: false).fetch(
+        params: {'stripeId': profile.stripeCustomerId},
+      );
     } catch (error) {
       rethrow;
     }
@@ -217,16 +214,19 @@ class ConfirmOrderButton extends StatelessWidget {
             ? () {
                 var cartProvider = Provider.of<Cart>(context, listen: false);
                 //TODO: Confirm purchase
-                Provider.of<Orders>(context, listen: false).createOrder(
-                  restaurant: restaurant,
-                  orderItems: cartProvider.itemsMap[restaurant],
-                  subtotal: cartProvider.getTotal(restaurant),
-                  total: cartProvider.getTotal(restaurant) +
-                      double.parse(restaurant.deliveryFee),
-                  payWithCash:
-                      Provider.of<PaymentMethods>(context, listen: false)
-                          .selectedMethod
-                          .isCash,
+                Provider.of<Orders>(context, listen: false).post(
+                  item: Order(
+                    restaurant: restaurant,
+                    orderItems: cartProvider.itemsMap[restaurant],
+                    subtotal: cartProvider.getTotal(restaurant).toString(),
+                    total: (cartProvider.getTotal(restaurant) +
+                            double.parse(restaurant.deliveryFee))
+                        .toString(),
+                    payWithCash:
+                        Provider.of<PaymentMethods>(context, listen: false)
+                            .selectedMethod
+                            .isCash,
+                  ),
                 );
               }
             : null,
@@ -385,8 +385,7 @@ class CartItem extends StatelessWidget {
                     color: Theme.of(context).errorColor,
                     onPressed: () {
                       Provider.of<Cart>(context, listen: false).remove(
-                          Provider.of<RestaurantProvider>(context,
-                                  listen: false)
+                          Provider.of<Restaurants>(context, listen: false)
                               .selectedRestaurant,
                           item);
                     },

@@ -2,28 +2,41 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
 import '../exceptions/authentication_exception.dart';
-import '../utils.dart';
+import '../utils/api_utils.dart';
 
 class Auth extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  Auth({
+    @required this.auth,
+    @required this.googleSignIn,
+  });
 
-  final _googleSignIn = GoogleSignIn();
+  final FirebaseAuth auth;
+  final GoogleSignIn googleSignIn;
 
-  bool get isLoggedIn => _auth.currentUser != null;
+  bool get isLoggedIn => auth.currentUser != null;
 
-  Future<void> _authenticate(UserCredential userCredential) async {
-    final apiUrl = "$server/profile/";
+  Future<bool> authenticate(UserCredential userCredentials,
+      [http.Client client]) async {
+    final url = "$server/profile/";
 
     try {
-      final idToken = await userCredential.user.getIdToken();
+      final token = await userCredentials.user.getIdToken();
 
-      final response = await apiGet(apiUrl, requestApiHeaders(idToken));
+      final response = await ApiHandler.request(
+        method: HTTP_METHOD.get,
+        url: url,
+        token: token,
+        client: client,
+      );
 
       // Save profile as json in shared preferences
       final prefs = await SharedPreferences.getInstance();
@@ -32,6 +45,7 @@ class Auth extends ChangeNotifier {
       print(jsonEncode(myProfile));
       print('Api auth succeded');
       notifyListeners();
+      return true;
     } on TimeoutException catch (e) {
       print(e);
       throw TimeoutException('Time out');
@@ -41,88 +55,65 @@ class Auth extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    await auth.signOut();
+    await googleSignIn.signOut();
     print("User signed out");
     notifyListeners();
   }
 
-  Future<void> signUpEmailPassword(
-      BuildContext context, String email, String password) async {
-    final loadingDialog = buildLoadingDialog(context, 'Creando usuario...');
-    await loadingDialog.show();
-
+  Future<bool> signUpEmailPassword(String email, String password) async {
     try {
-      final user = (await _auth.createUserWithEmailAndPassword(
-              email: email, password: password))
-          .user;
-      assert(user != null);
-    } catch (error) {
+      await auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      return true;
+    } on FirebaseAuthException {
       rethrow;
-    } finally {
-      loadingDialog.hide();
+    } on TimeoutException {
+      rethrow;
     }
   }
 
-  Future<void> signInWithEmail(
-      BuildContext context, String email, String password) async {
-    var dialog = buildLoadingDialog(context, 'Iniciando sesión...');
-    await dialog.show();
-
+  Future<UserCredential> signInWithEmail(String email, String password) async {
     try {
-      final authResult = await _auth.signInWithEmailAndPassword(
+      final userCredential = await auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      assert(authResult != null);
-      assert(authResult.user.uid.isNotEmpty);
-      print("Firebase auth succeded");
-
-      await _authenticate(authResult);
-    } catch (error) {
+      assert(userCredential != null);
+      return userCredential;
+    } on FirebaseAuthException {
       rethrow;
-    } finally {
-      dialog.hide();
+    } on TimeoutException {
+      throw TimeoutException('Petition time run out');
     }
   }
 
-  Future<dynamic> authenticateWithGoogle(BuildContext context) async {
+  Future<UserCredential> authenticateWithGoogle(
+      [OAuthCredential credential]) async {
     GoogleSignInAuthentication googleSignInAuthentication;
     GoogleSignInAccount googleSignInAccount;
-    try {
-      googleSignInAccount = await _googleSignIn.signIn();
+    if (credential == null) {
+      try {
+        googleSignInAccount = await googleSignIn.signIn();
+        googleSignInAuthentication = await googleSignInAccount.authentication;
+      } catch (error) {
+        throw PlatformException(code: 'Cancelled');
+      }
 
-      googleSignInAuthentication = await googleSignInAccount.authentication;
-    } catch (error) {
-      throw AuthenticationException("Google flow cancelled");
+      credential = GoogleAuthProvider.credential(
+        idToken: googleSignInAuthentication.idToken,
+        accessToken: googleSignInAuthentication.accessToken,
+      );
     }
 
-    final AuthCredential credential = GoogleAuthProvider.credential(
-      idToken: googleSignInAuthentication.idToken,
-      accessToken: googleSignInAuthentication.accessToken,
-    );
-
-    final authResult = await _auth.signInWithCredential(credential);
-    final user = authResult.user;
-    assert(!user.isAnonymous);
-
-    final currentUser = _auth.currentUser;
-    assert(user.uid == currentUser.uid);
-    print("Firebase auth succeded");
-
-    var dialog = buildLoadingDialog(context, 'Iniciando sesión...');
-    await dialog.show();
-
     try {
-      await _authenticate(authResult);
-    } catch (error) {
+      final userCredential = await auth.signInWithCredential(credential);
+      return userCredential;
+    } on TimeoutException {
       rethrow;
-    } finally {
-      dialog.hide();
+    } on FirebaseAuthException {
+      rethrow;
     }
-
-    print('Signed in with google succesfully: $user');
   }
 
   Future<Profile> fetchMyProfile() async {

@@ -1,0 +1,199 @@
+
+[
+    {
+        "id": 1,
+        "item_set": [
+            {
+                "id": 1,
+                "amenities": [
+                    {
+                        "field_type": "C",
+                        "minimum_select": 0,
+                        "maximum_select": 1,
+                        "obligatory": false,
+                        "amenity": {
+                            "id": 1,
+                            "ingredient_set": [
+                                {
+                                    "id": 1,
+                                    "name": "Queso",
+                                    "price": "50.00"
+                                },
+                                {
+                                    "id": 2,
+                                    "name": "Jamon",
+                                    "price": "20.00"
+                                },
+                                {
+                                    "id": 3,
+                                    "name": "Zanahoria",
+                                    "price": "25.99"
+                                }
+                            ],
+                            "name": "Barra Fria",
+                            "active": true,
+                            "restaurant": 1
+                        }
+                    }
+                ],
+                "name": "Ensalada Chica",
+                "image": "http://127.0.0.1:8000/media/items/ensalada-vegetal-istock.webp",
+                "price": "120.00",
+                "description": "LOREM IPUSM",
+                "active": true,
+                "restaurant": 1,
+                "category": 1
+            },
+            {
+                "id": 2,
+                "amenities": [
+                    {
+                        "field_type": "R",
+                        "minimum_select": 0,
+                        "maximum_select": 2,
+                        "obligatory": true,
+                        "amenity": {
+                            "id": 1,
+                            "ingredient_set": [
+                                {
+                                    "id": 1,
+                                    "name": "Queso",
+                                    "price": "50.00"
+                                },
+                                {
+                                    "id": 2,
+                                    "name": "Jamon",
+                                    "price": "20.00"
+                                },
+                                {
+                                    "id": 3,
+                                    "name": "Zanahoria",
+                                    "price": "25.99"
+                                }
+                            ],
+                            "name": "Barra Fria",
+                            "active": true,
+                            "restaurant": 1
+                        }
+                    },
+                    {
+                        "field_type": "R",
+                        "minimum_select": 0,
+                        "maximum_select": 2,
+                        "obligatory": true,
+                        "amenity": {
+                            "id": 18,
+                            "ingredient_set": [
+                                {
+                                    "id": 29,
+                                    "name": "Pollo Perejil",
+                                    "price": "50.00"
+                                },
+                                {
+                                    "id": 30,
+                                    "name": "Pollo Bufalo",
+                                    "price": "20.00"
+                                },
+                                {
+                                    "id": 31,
+                                    "name": "Pollo Mostaza",
+                                    "price": "20.00"
+                                }
+                            ],
+                            "name": "Pollo",
+                            "active": true,
+                            "restaurant": 1
+                        }
+                    }
+                ],
+                "name": "Ensalada Mediana",
+                "image": "http://127.0.0.1:8000/media/items/jung.jpg",
+                "price": "125.00",
+                "description": "Ensalada Mediana rica",
+                "active": true,
+                "restaurant": 1,
+                "category": 1
+            },
+            {
+                "id": 3,
+                "amenities": [
+                    {
+                        "field_type": "R",
+                        "minimum_select": 0,
+                        "maximum_select": 5,
+                        "obligatory": true,
+                        "amenity": {
+                            "id": 1,
+                            "ingredient_set": [
+                                {
+                                    "id": 1,
+                                    "name": "Queso",
+                                    "price": "50.00"
+                                },
+                                {
+                                    "id": 2,
+                                    "name": "Jamon",
+                                    "price": "20.00"
+                                },
+                                {
+                                    "id": 3,
+                                    "name": "Zanahoria",
+                                    "price": "25.99"
+                                }
+                            ],
+                            "name": "Barra Fria",
+                            "active": true,
+                            "restaurant": 1
+                        }
+                    },
+                    {
+                        "field_type": "B",
+                        "minimum_select": 2,
+                        "maximum_select": 3,
+                        "obligatory": true,
+                        "amenity": {
+                            "id": 18,
+                            "ingredient_set": [
+                                {
+                                    "id": 29,
+                                    "name": "Pollo Perejil",
+                                    "price": "50.00"
+                                },
+                                {
+                                    "id": 30,
+                                    "name": "Pollo Bufalo",
+                                    "price": "20.00"
+                                },
+                                {
+                                    "id": 31,
+                                    "name": "Pollo Mostaza",
+                                    "price": "20.00"
+                                }
+                            ],
+                            "name": "Pollo",
+                            "active": true,
+                            "restaurant": 1
+                        }
+                    }
+                ],
+                "name": "Ensalada Grande",
+                "image": "http://127.0.0.1:8000/media/items/jung_x3k4zQS.jpg",
+                "price": "150.00",
+                "description": "Ensalada grandotea",
+                "active": true,
+                "restaurant": 1,
+                "category": 1
+            }
+        ],
+        "name": "Ensaladas",
+        "image": "http://127.0.0.1:8000/media/categories/ensalada-de-pollo.jpg",
+        "active": true
+    },
+    {
+        "id": 2,
+        "item_set": [],
+        "name": "Paninis",
+        "image": "http://127.0.0.1:8000/media/categories/126710_640x428_xEesFi5.jpg",
+        "active": true
+    }
+]

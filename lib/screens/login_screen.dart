@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../providers/auth.dart';
-import '../utils.dart';
+import '../utils/dialog_utils.dart';
 import '../widgets/app_body.dart';
 import '../widgets/app_card.dart';
 import 'register_screen.dart';
@@ -18,8 +18,10 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     Future<void> _signInWithGoogle() async {
       try {
+        final userCredentials = await Provider.of<Auth>(context, listen: false)
+            .authenticateWithGoogle();
         await Provider.of<Auth>(context, listen: false)
-            .authenticateWithGoogle(context);
+            .authenticate(userCredentials);
       } on TimeoutException catch (error) {
         print(error);
         buildError(context, Errors.connectionError);
@@ -29,52 +31,80 @@ class LoginScreen extends StatelessWidget {
     }
 
     return AppBody(
-      child: SingleChildScrollView(
-        child: Center(
-          child: AppCard(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Image(image: AssetImage('assets/logo.jpeg')),
-                  LoginForm(),
-                  Container(
-                    child: Wrap(
-                      children: <Widget>[
-                        Text(
-                          '¿No tienes cuenta? ',
+      title: 'Iniciar sesion',
+      child: Center(
+        child: AppCard(
+          child: Container(
+            padding: bodyPadding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image(image: AssetImage('assets/logo.jpeg')),
+                LoginForm(),
+                Container(
+                  child: Wrap(
+                    children: <Widget>[
+                      Text(
+                        '¿No tienes cuenta? ',
+                        style: TextStyle(
+                          fontSize: 11,
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.of(context)
+                              .pushNamed(RegisterScreen.routeName);
+                        },
+                        child: Text(
+                          'Regístrate aquí',
                           style: TextStyle(
+                            color: Theme.of(context).accentColor,
+                            decoration: TextDecoration.underline,
                             fontSize: 11,
                           ),
                         ),
-                        InkWell(
-                          onTap: () {
-                            Navigator.of(context)
-                                .pushNamed(RegisterScreen.routeName);
-                          },
-                          child: Text(
-                            'Regístrate aquí',
-                            style: TextStyle(
-                              color: Theme.of(context).accentColor,
-                              decoration: TextDecoration.underline,
-                              fontSize: 11,
-                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(0, 25, 0, 10),
+                  child: OutlineButton(
+                    splashColor: Colors.grey,
+                    onPressed: _signInWithGoogle,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(40)),
+                    highlightElevation: 0,
+                    borderSide: BorderSide(color: Colors.grey),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Image(
+                            image: AssetImage("assets/google_logo.png"),
+                            height: 35.0,
                           ),
-                        ),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: Text(
+                              'Iniciar sesion con Google',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                  Container(
-                    child: RaisedButton(
-                      child: Text('Iniciar con Google'),
-                      onPressed: _signInWithGoogle,
-                    ),
-                  )
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -115,13 +145,15 @@ class _LoginFormState extends State<LoginForm> {
     _formKey.currentState.save();
 
     try {
+      final userCredentials = await Provider.of<Auth>(context, listen: false)
+          .signInWithEmail(_authData['email'], _authData['password']);
       await Provider.of<Auth>(context, listen: false)
-          .signInWithEmail(context, _authData['email'], _authData['password']);
+          .authenticate(userCredentials);
     } on PlatformException catch (error) {
       final errorMessage = Errors.userNotFound;
       print(error);
       buildError(context, errorMessage);
-    } catch (error) {
+    } on TimeoutException catch (error) {
       final errorMessage = Errors.connectionError;
       print(error);
       buildError(context, errorMessage, 'Reintentar', _submit);
@@ -187,20 +219,20 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ),
           Container(
+            margin: const EdgeInsets.symmetric(vertical: 25),
             width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(0, 25, 0, 10),
             child: RaisedButton(
-              child: Text(
-                'Iniciar sesión',
-              ),
+              padding: const EdgeInsets.all(15),
               onPressed: _submit,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+              child: Text(
+                'Iniciar sesion',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 70.0, vertical: 8.0),
             ),
-          ),
+          )
         ],
       ),
     );

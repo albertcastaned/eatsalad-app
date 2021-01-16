@@ -1,13 +1,46 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../exceptions/invalid_json_exception.dart';
 import '../services/stripe.dart' as stripe;
+import '../utils/api_utils.dart';
+import 'base_model.dart';
 
 class PaymentMethods extends ChangeNotifier {
   PaymentMethod selectedMethod;
-  List<PaymentMethod> paymentMethods;
-  Future<void> fetchPaymentMethods(String stripeId) async {
+  List<PaymentMethod> items;
+  PaymentMethods([List items]);
+
+  void addPaymentMethod(PaymentMethod method) {
+    items.add(method);
+    notifyListeners();
+  }
+
+  Future<void> setSelected(PaymentMethod newMethod) async {
+    for (var method in items) {
+      method.selected = method == newMethod;
+      if (method == newMethod) {
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString("selected_payment_method", newMethod.id);
+        method.selected = true;
+        selectedMethod = method;
+      } else {
+        method.selected = false;
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<bool> fetch({http.Client client, Map<String, dynamic> params}) async {
     try {
+      if (params['stripeId'] == null) {
+        print("Stripe id not found in params.");
+        return false;
+      }
       final prefs = await SharedPreferences.getInstance();
       final selectedPaymentMethod = prefs.getString("selected_payment_method");
 
@@ -15,15 +48,12 @@ class PaymentMethods extends ChangeNotifier {
 
       final cashPaymentMethod = PaymentMethod(
         typeCard: 'cash',
-        cardHolderName: '',
         isCash: true,
-        cardNumber: '-1',
-        id: "-1",
-        expiryDate: "-1",
       );
       fetchedCards.add(cashPaymentMethod);
 
-      final paymentMethodsData = await stripe.getPaymentMethods(stripeId);
+      final paymentMethodsData =
+          await stripe.getPaymentMethods(params['stripeId']);
 
       // No payment method card set
       if (paymentMethodsData.isEmpty) {
@@ -53,53 +83,45 @@ class PaymentMethods extends ChangeNotifier {
 
         if (!fetchedCards.contains(newCard)) fetchedCards.add(newCard);
       }
-
-      paymentMethods = fetchedCards;
-    } catch (error) {
+      items = fetchedCards;
+      return true;
+    } on TimeoutException catch (error) {
+      print(error);
+      rethrow;
+    } on HttpException catch (error) {
+      print(error);
+      rethrow;
+    } on InvalidJsonException catch (error) {
+      print(error);
       rethrow;
     }
   }
 
-  void addPaymentMethod(PaymentMethod method) {
-    paymentMethods.add(method);
-    notifyListeners();
-  }
-
-  Future<void> setSelected(PaymentMethod newMethod) async {
-    for (var method in paymentMethods) {
-      method.selected = method == newMethod;
-      if (method == newMethod) {
-        final prefs = await SharedPreferences.getInstance();
-        prefs.setString("selected_payment_method", newMethod.id);
-        method.selected = true;
-        selectedMethod = method;
-      } else {
-        method.selected = false;
-      }
-    }
-    notifyListeners();
+  Future post({item, http.Client client}) {
+    throw UnimplementedError();
   }
 }
 
-class PaymentMethod {
-  final String id;
-  final String cardNumber;
-  final String expiryDate;
-  final String cardHolderName;
-  final bool newCard;
-  final String typeCard;
+class PaymentMethod implements BaseModel {
+  String id;
+  String cardNumber;
+  String expiryDate;
+  String cardHolderName;
+  bool newCard;
+  String typeCard;
   bool selected;
-  final bool isCash;
+  bool isCash;
 
-  PaymentMethod(
-      {@required this.id,
-      @required this.cardNumber,
-      @required this.expiryDate,
-      @required this.cardHolderName,
-      this.newCard = false,
-      this.typeCard,
-      this.selected = false,
-      this.isCash = false});
+  PaymentMethod({
+    this.id,
+    this.cardNumber,
+    this.expiryDate,
+    this.cardHolderName,
+    this.newCard = false,
+    this.typeCard,
+    this.selected = false,
+    this.isCash = false,
+  });
 
   @override
   String toString() {
@@ -107,4 +129,20 @@ class PaymentMethod {
         ? "Cash"
         : "Card Number: $cardNumber, Card Holder Name: $cardHolderName";
   }
+
+  PaymentMethod.fromJson(Map<String, dynamic> json) {
+    ApiHandler.validateJson(json, requiredKeys);
+    id = json['id'];
+    cardNumber = json['card']['last4'];
+    expiryDate = '${json['card']['exp_month']}/${json['card']['exp_year']}';
+    cardHolderName = json['billing_details']['name'];
+    typeCard = json['card']['brand'];
+  }
+
+  @override
+  List<String> requiredKeys = [
+    'id',
+    'card',
+    'billing_details',
+  ];
 }

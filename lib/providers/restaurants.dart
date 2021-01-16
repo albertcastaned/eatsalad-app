@@ -1,13 +1,18 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constants.dart';
-import '../utils.dart';
+import '../exceptions/invalid_json_exception.dart';
+import '../utils/api_utils.dart';
+import '../utils/location_utils.dart';
 
-class Restaurant {
+import 'api_provider.dart';
+import 'base_model.dart';
+
+class Restaurant implements BaseModel {
   int id;
   Schedule schedule;
   String name;
@@ -73,9 +78,12 @@ class Restaurant {
     data['latitude'] = latitude;
     return data;
   }
+
+  @override
+  List<String> requiredKeys;
 }
 
-class Schedule {
+class Schedule implements BaseModel {
   int id;
   String startTime;
   String endTime;
@@ -100,6 +108,8 @@ class Schedule {
       availableSaturday});
 
   Schedule.fromJson(Map<String, dynamic> json) {
+    ApiHandler.validateJson(json, requiredKeys);
+
     id = json['id'];
     startTime = json['start_time'];
     endTime = json['end_time'];
@@ -126,44 +136,74 @@ class Schedule {
     data['available_saturday'] = availableSaturday;
     return data;
   }
+
+  @override
+  List<String> requiredKeys = [
+    'start_time',
+    'end_time',
+    'available_sunday',
+    'available_monday',
+    'available_tuesday',
+    'available_wednesday',
+    'available_thursday',
+    'available_friday',
+    'available_saturday',
+  ];
 }
 
-class RestaurantProvider extends ChangeNotifier {
-  List<Restaurant> restaurants = <Restaurant>[];
+class Restaurants extends ApiProvider {
   Restaurant selectedRestaurant;
 
-  Future<void> fetchRestaurants() async {
+  @override
+  Future<bool> fetch(
+      {http.Client client, Map<String, dynamic> params, String token}) async {
     try {
-      final apiUrl = "$server/restaurants";
-      final token = await FirebaseAuth.instance.currentUser.getIdToken();
-      final response = await apiGet(apiUrl, requestApiHeaders(token))
-          .timeout(Duration(seconds: timeoutSeconds));
-
-      // Get current selected coordinates
-      final prefs = await SharedPreferences.getInstance();
-      final longitude = prefs.getString("longitude");
-      final latitude = prefs.getString("latitude");
-
-      //TODO: Optimize
-
-      restaurants =
-          (response as List).map((item) => Restaurant.fromJson(item)).toList();
-      if (longitude != null && latitude != null) {
-        for (var restaurant in restaurants) {
-          final distance = distanceBetweenPoints(
-            restaurant.latitude,
-            restaurant.longitude,
-            double.parse(latitude),
-            double.parse(longitude),
-          );
-          restaurant.outOfRange = distance > restaurant.areaCoverage;
-        }
+      if (token == null) {
+        token = await FirebaseAuth.instance.currentUser.getIdToken();
       }
+
+      final url = "$server/restaurants";
+      final response = await ApiHandler.request(
+        method: HTTP_METHOD.get,
+        url: url,
+        token: token,
+        client: client,
+      );
+
+      items =
+          (response as List).map((item) => Restaurant.fromJson(item)).toList();
+
       notifyListeners();
-      return restaurants;
-    } catch (error) {
-      print(error);
-      throw Exception(error);
+      return true;
+    } on TimeoutException {
+      rethrow;
+    } on HttpException {
+      rethrow;
+    } on InvalidJsonException {
+      rethrow;
     }
+  }
+
+  void setOutOfRange() async {
+    // Get current selected coordinates
+    final prefs = await SharedPreferences.getInstance();
+    final longitude = prefs.getString("longitude");
+    final latitude = prefs.getString("latitude");
+    if (longitude != null && latitude != null) {
+      for (var restaurant in items) {
+        final distance = distanceBetweenPoints(
+          restaurant.latitude,
+          restaurant.longitude,
+          double.parse(latitude),
+          double.parse(longitude),
+        );
+        restaurant.outOfRange = distance > restaurant.areaCoverage;
+      }
+    }
+  }
+
+  @override
+  Future post({item, http.Client client, String token}) {
+    throw UnimplementedError();
   }
 }

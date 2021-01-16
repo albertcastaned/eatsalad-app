@@ -6,22 +6,25 @@ import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../providers/auth.dart';
+import '../providers/payment_methods.dart';
 import '../services/stripe.dart' as stripe;
-import '../utils.dart';
 import '../utils/card_utils.dart';
+import '../utils/dialog_utils.dart';
 
 class CustomCreditCardForm extends StatefulWidget {
-  const CustomCreditCardForm({
-    Key key,
-    this.cardNumber,
-    this.expiryDate,
-    this.cardHolderName,
-    this.cvvCode,
-    @required this.onCreditCardModelChange,
-    this.themeColor,
-    this.textColor = Colors.black,
-    this.cursorColor,
-  }) : super(key: key);
+  final GlobalKey<FormState> formKey;
+  const CustomCreditCardForm(
+      {Key key,
+      this.cardNumber,
+      this.expiryDate,
+      this.cardHolderName,
+      this.cvvCode,
+      @required this.onCreditCardModelChange,
+      this.themeColor,
+      this.textColor = Colors.black,
+      this.cursorColor,
+      this.formKey})
+      : super(key: key);
 
   final String cardNumber;
   final String expiryDate;
@@ -37,30 +40,55 @@ class CustomCreditCardForm extends StatefulWidget {
 }
 
 class _CreditCardFormState extends State<CustomCreditCardForm> {
-  final _formKey = GlobalKey<FormState>();
+  GlobalKey<FormState> formKey;
 
   Future<void> saveCard(BuildContext context) async {
+    final loadingDialog =
+        buildLoadingDialog(context, 'Agregando nueva tarjeta...');
+
     try {
       final profile =
           await Provider.of<Auth>(context, listen: false).fetchMyProfile();
       final card = CreditCardModel(
-          cardNumber, expiryDate, cardHolderName, cvvCode, true);
-      final response = await stripe.addNewCard(
-        context: context,
+        cardNumber,
+        expiryDate,
+        cardHolderName,
+        cvvCode,
+        true,
+      );
+
+      final createPaymentMethodResponse = await stripe.createPaymentMethod(
         card: card,
         customerId: profile.stripeCustomerId,
       );
-      if (!response.success) {
+      if (!createPaymentMethodResponse.success) {
+        print(createPaymentMethodResponse);
         buildError(context, Errors.stripeTransactionError);
       } else {
-        await showSuccesfulDialog('Tarjeta aprobada', context);
-        Navigator.pop(context, true);
+        final paymentMethod =
+            PaymentMethod.fromJson(createPaymentMethodResponse.response);
+
+        final attachPaymentMethodResponse =
+            await stripe.attachPaymentMethodToCustomer(
+          customerId: profile.stripeCustomerId,
+          paymentMethodId: paymentMethod.id,
+        );
+
+        if (attachPaymentMethodResponse.success) {
+          Provider.of<PaymentMethods>(context, listen: false)
+              .addPaymentMethod(paymentMethod);
+          await showSuccesfulDialog('Tarjeta aprobada', context);
+          Navigator.pop(context, true);
+        } else {
+          print(attachPaymentMethodResponse);
+          buildError(context, Errors.stripeTransactionError);
+        }
       }
-      print(response.message);
     } catch (error) {
       buildError(context, Errors.connectionError);
-
       rethrow;
+    } finally {
+      loadingDialog.hide();
     }
   }
 
@@ -103,6 +131,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
   @override
   void initState() {
     super.initState();
+    formKey = widget.formKey ?? GlobalKey<FormState>();
 
     createCreditCardModel();
 
@@ -157,13 +186,14 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
         primaryColorDark: themeColor,
       ),
       child: Form(
-        key: _formKey,
+        key: formKey,
         child: Column(
           children: <Widget>[
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               margin: const EdgeInsets.only(left: 16, top: 16, right: 16),
               child: TextFormField(
+                key: Key('number-field'),
                 controller: _cardNumberController,
                 cursorColor: widget.cursorColor ?? themeColor,
                 style: TextStyle(
@@ -192,6 +222,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
               child: TextFormField(
+                key: Key('date-field'),
                 controller: _expiryDateController,
                 cursorColor: widget.cursorColor ?? themeColor,
                 style: TextStyle(
@@ -216,6 +247,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
               child: TextFormField(
+                key: Key('cvc-field'),
                 focusNode: cvvFocusNode,
                 controller: _cvvCodeController,
                 cursorColor: widget.cursorColor ?? themeColor,
@@ -248,6 +280,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
               child: TextFormField(
+                key: Key('name-field'),
                 controller: _cardHolderNameController,
                 cursorColor: widget.cursorColor ?? themeColor,
                 style: TextStyle(
@@ -272,6 +305,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
               margin: const EdgeInsets.only(left: 16, top: 8, right: 16),
               width: double.infinity,
               child: RaisedButton(
+                key: Key('submit'),
                 padding: const EdgeInsets.all(14),
                 color: Theme.of(context).primaryColor,
                 textColor: Colors.white,
@@ -279,7 +313,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
                   'Agregar Metodo de Pago',
                 ),
                 onPressed: () {
-                  if (_formKey.currentState.validate()) {
+                  if (formKey.currentState.validate()) {
                     saveCard(context);
                   }
                 },

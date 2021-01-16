@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants.dart';
 import '../providers/restaurants.dart';
 import '../widgets/app_body.dart';
-import '../widgets/app_title.dart';
 import '../widgets/content_loader.dart';
 
 var googlePlace = GooglePlace(googleApiKey);
@@ -62,6 +61,7 @@ class _AddressSetupScreenState extends State<AddressSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return AppBody(
+      title: 'Elegir ubicacion',
       isFullScreen: true,
       child: SingleChildScrollView(
         child: Container(
@@ -69,7 +69,6 @@ class _AddressSetupScreenState extends State<AddressSetupScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AppTitle(text: 'Buscar direccion'),
               TextField(
                 onChanged: (value) {
                   setState(() {
@@ -143,8 +142,7 @@ class LocationCard extends StatelessWidget {
 
       // TODO: Find better way to do this ?
       // Fetch restaurants again
-      Provider.of<RestaurantProvider>(context, listen: false)
-          .fetchRestaurants();
+      Provider.of<Restaurants>(context, listen: false).fetch();
     } catch (error) {
       rethrow;
     }

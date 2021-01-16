@@ -51,6 +51,7 @@ class _ItemSetupState extends State<ItemSetup> {
   Widget build(BuildContext context) {
     return AppBody(
       isFullScreen: true,
+      title: widget.item.name,
       child: Stack(
         children: [
           SingleChildScrollView(
@@ -482,9 +483,8 @@ class ItemSetupAddToCartState extends State<ItemSetupAddToCart> {
                 });
               }
               final orderItem = OrderItem(
-                restaurant:
-                    Provider.of<RestaurantProvider>(context, listen: false)
-                        .selectedRestaurant,
+                restaurant: Provider.of<Restaurants>(context, listen: false)
+                    .selectedRestaurant,
                 name: widget.item.name,
                 quantity: _quantity,
                 notes: notesTextController.text,
@@ -492,7 +492,7 @@ class ItemSetupAddToCartState extends State<ItemSetupAddToCart> {
                 ingredients: orderItemIngredients,
               );
               Provider.of<Cart>(context, listen: false).addToCart(
-                  Provider.of<RestaurantProvider>(context, listen: false)
+                  Provider.of<Restaurants>(context, listen: false)
                       .selectedRestaurant,
                   orderItem);
               Navigator.of(context).pop();

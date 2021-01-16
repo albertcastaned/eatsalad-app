@@ -1,20 +1,22 @@
+import 'package:EatSalad/constants.dart';
 import 'package:flutter/material.dart';
 
 class AppBody extends StatelessWidget {
   final Widget child;
-  final Widget title;
+  final String title;
   final bool isFullScreen;
-  final AppBar appBar;
-  AppBody(
-      {@required this.child,
-      this.title,
-      this.isFullScreen = false,
-      this.appBar});
+  AppBody({
+    @required this.child,
+    this.title,
+    this.isFullScreen = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar ?? null,
+      appBar: AppBar(
+        title: title == null ? null : Text(title),
+      ),
       resizeToAvoidBottomInset: true,
       body: isFullScreen
           ? SafeArea(
@@ -39,7 +41,7 @@ class AppBody extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.all(20),
+                    padding: bodyPadding,
                     child: child,
                   ),
                 ],

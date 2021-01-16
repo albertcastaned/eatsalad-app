@@ -1,8 +1,10 @@
 // Packages
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 // Local imports
@@ -38,10 +40,13 @@ class EatApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => Auth(),
+          create: (ctx) => Auth(
+            auth: FirebaseAuth.instance,
+            googleSignIn: GoogleSignIn(),
+          ),
         ),
         ChangeNotifierProvider(
-          create: (ctx) => RestaurantProvider(),
+          create: (ctx) => Restaurants(),
         ),
         ChangeNotifierProvider(
           create: (ctx) => CategoriesProvider(),

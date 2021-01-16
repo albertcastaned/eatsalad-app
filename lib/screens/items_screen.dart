@@ -26,8 +26,9 @@ class _ItemsScreenState extends State<ItemsScreen> {
   void initState() {
     assert(widget.restaurant != null);
 
-    _future = Provider.of<CategoriesProvider>(context, listen: false)
-        .fetchCategories(widget.restaurant.id);
+    _future = Provider.of<CategoriesProvider>(context, listen: false).fetch(
+      params: {'restaurant': widget.restaurant.id},
+    );
     super.initState();
   }
 
@@ -35,6 +36,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
   Widget build(BuildContext context) {
     return AppBody(
       isFullScreen: true,
+      title: "Articulos",
       child: Container(
         child: Stack(
           children: [
@@ -46,9 +48,9 @@ class _ItemsScreenState extends State<ItemsScreen> {
                     widget: Consumer<CategoriesProvider>(
                       builder: (ctx, categoryData, child) => ListView.separated(
                         separatorBuilder: (context, intex) => Divider(),
-                        itemCount: categoryData.categories.length,
+                        itemCount: categoryData.items.length,
                         itemBuilder: (context, index) => CategorySection(
-                            category: categoryData.categories[index]),
+                            category: categoryData.items[index]),
                       ),
                     ),
                   ),

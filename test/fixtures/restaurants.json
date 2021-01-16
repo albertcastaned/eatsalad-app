@@ -1,0 +1,54 @@
+[
+    {
+        "id": 1,
+        "schedule": {
+            "id": 1,
+            "start_time": "09:00:00",
+            "end_time": "20:00:00",
+            "available_sunday": false,
+            "available_monday": true,
+            "available_tuesday": true,
+            "available_wednesday": true,
+            "available_thursday": true,
+            "available_friday": true,
+            "available_saturday": true
+        },
+        "image": "http://127.0.0.1:8000/media/restaurants/6174a5ca-eb93-4fca-bb15-65b4011338fa.jpeg",
+        "name": "Eat Salad - Boulevard Rodriguez",
+        "address": "Boulevard Rodriguez",
+        "state": "Sonora",
+        "city": "Hermosillo",
+        "minimum_order_cost": "50.00",
+        "delivery_fee": "30.00",
+        "areaCoverage": "0.0600000",
+        "available": true,
+        "latitude": "20.6498179",
+        "longitude": "-100.3610186"
+    },
+    {
+        "id": 2,
+        "schedule": {
+            "id": 1,
+            "start_time": "09:00:00",
+            "end_time": "20:00:00",
+            "available_sunday": false,
+            "available_monday": true,
+            "available_tuesday": true,
+            "available_wednesday": true,
+            "available_thursday": true,
+            "available_friday": true,
+            "available_saturday": true
+        },
+        "image": "http://127.0.0.1:8000/media/restaurants/BAD041E5-E428-40A6-B80A-5395503C6FD3.png",
+        "name": "Eat Salad - Ubika",
+        "address": "Qro",
+        "state": "qro",
+        "city": "qro",
+        "minimum_order_cost": "50.00",
+        "delivery_fee": "30.00",
+        "areaCoverage": "0.9000000",
+        "available": true,
+        "latitude": "20.6498035",
+        "longitude": "-100.4224985"
+    }
+]

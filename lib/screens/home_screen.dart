@@ -18,8 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _future;
   @override
   void initState() {
-    _future = Provider.of<RestaurantProvider>(context, listen: false)
-        .fetchRestaurants();
+    _future = Provider.of<Restaurants>(context, listen: false).fetch();
     super.initState();
   }
 
@@ -30,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return AppBody(
+      title: 'Sucursales',
       child: SingleChildScrollView(
         child: Container(
           child: Column(
@@ -37,20 +37,19 @@ class _HomeScreenState extends State<HomeScreen> {
             children: <Widget>[
               ContentLoader(
                 future: _future,
-                widget: Consumer<RestaurantProvider>(
+                widget: Consumer<Restaurants>(
                   builder: (ctx, data, child) => Flexible(
                     child: RefreshIndicator(
                       onRefresh: () => _future =
-                          Provider.of<RestaurantProvider>(context,
-                                  listen: false)
-                              .fetchRestaurants(),
+                          Provider.of<Restaurants>(context, listen: false)
+                              .fetch(),
                       child: ListView.separated(
                         shrinkWrap: true,
                         separatorBuilder: (context, intex) => Divider(),
-                        itemCount: data.restaurants.length,
+                        itemCount: data.items.length,
                         itemBuilder: (context, index) => RestaurantCard(
-                            restaurant: data.restaurants[index],
-                            available: !data.restaurants[index].outOfRange),
+                            restaurant: data.items[index],
+                            available: !data.items[index].outOfRange),
                       ),
                     ),
                   ),
@@ -86,7 +85,7 @@ class RestaurantCard extends StatelessWidget {
       child: InkWell(
         onTap: available
             ? () {
-                Provider.of<RestaurantProvider>(context, listen: false)
+                Provider.of<Restaurants>(context, listen: false)
                     .selectedRestaurant = restaurant;
                 Navigator.of(context).push(
                   MaterialPageRoute(
