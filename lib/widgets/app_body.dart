@@ -1,44 +1,51 @@
 import 'package:flutter/material.dart';
+import '../constants.dart';
 
 class AppBody extends StatelessWidget {
   final Widget child;
-  final Widget title;
+  final String title;
   final bool isFullScreen;
-  final AppBar appBar;
-  AppBody(
-      {@required this.child,
-      this.title,
-      this.isFullScreen = false,
-      this.appBar});
+  AppBody({
+    @required this.child,
+    this.title,
+    this.isFullScreen = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar ?? null,
+      appBar: AppBar(
+        title: title == null ? null : Text(title),
+      ),
+      resizeToAvoidBottomInset: true,
       body: isFullScreen
-          ? Container(
-              child: child,
+          ? SafeArea(
+              child: Container(
+                child: child,
+              ),
             )
-          : Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context).primaryColor,
-                          Color(0xff00b248)
-                        ]),
+          : SafeArea(
+              child: Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context).primaryColor,
+                            Color(0xff00b248)
+                          ]),
+                    ),
                   ),
-                ),
-                Container(
-                  padding: EdgeInsets.all(20),
-                  child: child,
-                ),
-              ],
+                  Container(
+                    padding: bodyPadding,
+                    child: child,
+                  ),
+                ],
+              ),
             ),
     );
   }

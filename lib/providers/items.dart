@@ -1,10 +1,16 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:async';
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 import '../constants.dart';
-import '../utils.dart';
+import '../exceptions/invalid_json_exception.dart';
+import '../utils/api_utils.dart';
+import 'api_provider.dart';
+import 'base_model.dart';
 
-class Category {
+class Category implements BaseModel {
   int id;
   List<Item> items;
   String name;
@@ -14,11 +20,12 @@ class Category {
   Category({this.id, this.items, this.name, this.image, this.active});
 
   Category.fromJson(Map<String, dynamic> json) {
+    ApiHandler.validateJson(json, requiredKeys);
     id = json['id'];
     if (json['item_set'] != null) {
-      items = new List<Item>();
+      items = <Item>[];
       json['item_set'].forEach((v) {
-        items.add(new Item.fromJson(v));
+        items.add(Item.fromJson(v));
       });
     }
     name = json['name'];
@@ -27,19 +34,28 @@ class Category {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.items != null) {
-      data['item_set'] = this.items.map((v) => v.toJson()).toList();
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    if (items != null) {
+      data['item_set'] = items.map((v) => v.toJson()).toList();
     }
-    data['name'] = this.name;
-    data['image'] = this.image;
-    data['active'] = this.active;
+    data['name'] = name;
+    data['image'] = image;
+    data['active'] = active;
     return data;
   }
+
+  @override
+  List<String> requiredKeys = [
+    'id',
+    'item_set',
+    'name',
+    'image',
+    'active',
+  ];
 }
 
-class Item {
+class Item implements BaseModel {
   int id;
   List<Amenities> amenities;
   String name;
@@ -62,11 +78,13 @@ class Item {
       this.category});
 
   Item.fromJson(Map<String, dynamic> json) {
+    ApiHandler.validateJson(json, requiredKeys);
+
     id = json['id'];
     if (json['amenities'] != null) {
-      amenities = new List<Amenities>();
+      amenities = <Amenities>[];
       json['amenities'].forEach((v) {
-        amenities.add(new Amenities.fromJson(v));
+        amenities.add(Amenities.fromJson(v));
       });
     }
     name = json['name'];
@@ -79,54 +97,88 @@ class Item {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.amenities != null) {
-      data['amenities'] = this.amenities.map((v) => v.toJson()).toList();
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    if (amenities != null) {
+      data['amenities'] = amenities.map((v) => v.toJson()).toList();
     }
-    data['name'] = this.name;
-    data['image'] = this.image;
-    data['price'] = this.price;
-    data['description'] = this.description;
-    data['active'] = this.active;
-    data['restaurant'] = this.restaurant;
-    data['category'] = this.category;
+    data['name'] = name;
+    data['image'] = image;
+    data['price'] = price;
+    data['description'] = description;
+    data['active'] = active;
+    data['restaurant'] = restaurant;
+    data['category'] = category;
     return data;
   }
+
+  @override
+  List<String> requiredKeys = [
+    'id',
+    'amenities',
+    'name',
+    'image',
+    'price',
+    'description',
+    'active',
+    'category'
+  ];
 }
 
-class Amenities {
-  bool multipleChoice;
+class Amenities implements BaseModel {
+  String fieldType;
+  int minimumSelect;
   int maximumSelect;
   bool obligatory;
   Amenity amenity;
 
   Amenities(
-      {this.multipleChoice, this.maximumSelect, this.obligatory, this.amenity});
+      {this.fieldType,
+      this.minimumSelect,
+      this.maximumSelect,
+      this.obligatory,
+      this.amenity});
 
   Amenities.fromJson(Map<String, dynamic> json) {
-    multipleChoice = json['multiple_choice'];
+    ApiHandler.validateJson(json, requiredKeys);
+
+    fieldType = json['field_type'];
+    minimumSelect = json['minimum_select'];
     maximumSelect = json['maximum_select'];
     obligatory = json['obligatory'];
-    amenity =
-        json['amenity'] != null ? new Amenity.fromJson(json['amenity']) : null;
+    amenity = Amenity.fromJson(json['amenity']);
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['multiple_choice'] = this.multipleChoice;
-    data['maximum_select'] = this.maximumSelect;
-    data['obligatory'] = this.obligatory;
-    if (this.amenity != null) {
-      data['amenity'] = this.amenity.toJson();
+    final data = <String, dynamic>{};
+    data['field_type'] = fieldType;
+    data['minimum_select'] = minimumSelect;
+    data['maximum_select'] = maximumSelect;
+    data['obligatory'] = obligatory;
+    if (amenity != null) {
+      data['amenity'] = amenity.toJson();
     }
     return data;
   }
+
+  @override
+  String toString() {
+    return amenity.name;
+  }
+
+  @override
+  List<String> requiredKeys = [
+    'field_type',
+    'minimum_select',
+    'maximum_select',
+    'obligatory',
+    'amenity'
+  ];
 }
 
-class Amenity {
+class Amenity implements BaseModel {
   int id;
-  List<Ingredients> ingredients;
+  List<Ingredient> ingredients;
   String name;
   bool active;
   int restaurant;
@@ -134,11 +186,13 @@ class Amenity {
   Amenity({this.id, this.ingredients, this.name, this.active, this.restaurant});
 
   Amenity.fromJson(Map<String, dynamic> json) {
+    ApiHandler.validateJson(json, requiredKeys);
+
     id = json['id'];
     if (json['ingredient_set'] != null) {
-      ingredients = new List<Ingredients>();
+      ingredients = <Ingredient>[];
       json['ingredient_set'].forEach((v) {
-        ingredients.add(new Ingredients.fromJson(v));
+        ingredients.add(Ingredient.fromJson(v));
       });
     }
     name = json['name'];
@@ -147,56 +201,100 @@ class Amenity {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    if (this.ingredients != null) {
-      data['ingredient_set'] = this.ingredients.map((v) => v.toJson()).toList();
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    if (ingredients != null) {
+      data['ingredient_set'] = ingredients.map((v) => v.toJson()).toList();
     }
-    data['name'] = this.name;
-    data['active'] = this.active;
-    data['restaurant'] = this.restaurant;
+    data['name'] = name;
+    data['active'] = active;
+    data['restaurant'] = restaurant;
     return data;
   }
+
+  @override
+  List<String> requiredKeys = ['id', 'ingredient_set', 'name', 'active'];
 }
 
-class Ingredients {
+class Ingredient implements BaseModel {
   int id;
   String name;
   String price;
 
-  Ingredients({this.id, this.name, this.price});
+  Ingredient({this.id, this.name, this.price});
 
-  Ingredients.fromJson(Map<String, dynamic> json) {
+  Ingredient.fromJson(Map<String, dynamic> json) {
+    ApiHandler.validateJson(json, requiredKeys);
+
     id = json['id'];
     name = json['name'];
     price = json['price'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['name'] = this.name;
-    data['price'] = this.price;
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    data['name'] = name;
+    data['price'] = price;
     return data;
   }
+
+  @override
+  String toString() {
+    return name;
+  }
+
+  @override
+  List<String> requiredKeys = [
+    'id',
+    'name',
+    'price',
+  ];
 }
 
-class CategoriesProvider extends ChangeNotifier {
-  List<Category> categories;
+class CategoriesProvider extends ApiProvider<Category> {
+  CategoriesProvider([List<Category> items]) : super(items);
 
-  Future<void> fetchCategories(int restaurant) async {
+  @override
+  Future<bool> fetch({
+    http.Client client,
+    Map<String, dynamic> params,
+    String token,
+  }) async {
     try {
-      final apiUrl = "${Constants.server}/categories/?restaurant=$restaurant";
-      String token = await FirebaseAuth.instance.currentUser.getIdToken();
-      final response = await apiGet(apiUrl, requestApiHeaders(token))
-          .timeout(Duration(seconds: Constants.timeoutSeconds));
+      if (params == null || params['restaurant'] == null) {
+        print("'restaurant' param is required.");
+        return false;
+      }
+      if (token == null) {
+        token = await FirebaseAuth.instance.currentUser.getIdToken();
+      }
+      final url = "$server/categories/?restaurant=${params['restaurant']}]}";
 
-      categories =
+      final response = await ApiHandler.request(
+        method: HTTP_METHOD.get,
+        url: url,
+        token: token,
+        client: client,
+      );
+      items =
           (response as List).map((item) => Category.fromJson(item)).toList();
-      return categories;
-    } catch (error) {
-      print(error);
-      throw Exception(error);
+      return true;
+    } on TimeoutException {
+      rethrow;
+    } on HttpException {
+      rethrow;
+    } on InvalidJsonException {
+      rethrow;
     }
+  }
+
+  @override
+  Future post({
+    item,
+    http.Client client,
+    String token,
+  }) async {
+    throw UnimplementedError();
   }
 }

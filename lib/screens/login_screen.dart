@@ -1,16 +1,15 @@
 import 'dart:async';
 
-import 'package:EatSalad/widgets/app_body.dart';
-import 'package:EatSalad/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../constants.dart';
 import '../providers/auth.dart';
-import '../utils.dart';
-
-import './RegisterScreen.dart';
+import '../utils/dialog_utils.dart';
+import '../widgets/app_body.dart';
+import '../widgets/app_card.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
@@ -19,21 +18,24 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     Future<void> _signInWithGoogle() async {
       try {
+        final userCredentials = await Provider.of<Auth>(context, listen: false)
+            .authenticateWithGoogle();
         await Provider.of<Auth>(context, listen: false)
-            .authenticateWithGoogle(context);
+            .authenticate(userCredentials);
       } on TimeoutException catch (error) {
         print(error);
-        buildError(context, Error.CONNECTION_ERROR);
+        buildError(context, Errors.connectionError);
       } catch (error) {
         print(error);
       }
     }
 
     return AppBody(
+      title: 'Iniciar sesion',
       child: Center(
         child: AppCard(
-          child: Padding(
-            padding: EdgeInsets.all(20),
+          child: Container(
+            padding: bodyPadding,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -68,11 +70,40 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  child: RaisedButton(
-                    child: Text('Iniciar con Google'),
-                    onPressed: () => _signInWithGoogle(),
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(0, 25, 0, 10),
+                  child: OutlineButton(
+                    splashColor: Colors.grey,
+                    onPressed: _signInWithGoogle,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(40)),
+                    highlightElevation: 0,
+                    borderSide: BorderSide(color: Colors.grey),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Image(
+                            image: AssetImage("assets/google_logo.png"),
+                            height: 35.0,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: Text(
+                              'Iniciar sesion con Google',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -93,15 +124,16 @@ class _LoginFormState extends State<LoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  Map<String, String> _authData = {
+  final Map<String, String> _authData = {
     'email': '',
     'password': '',
   };
 
   @override
   void initState() {
-    _emailController.text = "albertcastaned@gmail.com";
-    _passwordController.text = "blaster64";
+    //TODO: Remove this placeholder
+    _emailController.text = "test5@gmail.com";
+    _passwordController.text = "Blaster64\$";
 
     super.initState();
   }
@@ -113,14 +145,16 @@ class _LoginFormState extends State<LoginForm> {
     _formKey.currentState.save();
 
     try {
+      final userCredentials = await Provider.of<Auth>(context, listen: false)
+          .signInWithEmail(_authData['email'], _authData['password']);
       await Provider.of<Auth>(context, listen: false)
-          .signInWithEmail(context, _authData['email'], _authData['password']);
+          .authenticate(userCredentials);
     } on PlatformException catch (error) {
-      final errorMessage = Error.INVALID_ACCOUNT;
+      final errorMessage = Errors.userNotFound;
       print(error);
       buildError(context, errorMessage);
-    } catch (error) {
-      final errorMessage = Error.CONNECTION_ERROR;
+    } on TimeoutException catch (error) {
+      final errorMessage = Errors.connectionError;
       print(error);
       buildError(context, errorMessage, 'Reintentar', _submit);
     }
@@ -141,9 +175,9 @@ class _LoginFormState extends State<LoginForm> {
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value.isEmpty) {
-                return Error.EMPTY_FIELDS;
+                return Errors.emptyField;
               } else if (!value.contains('@')) {
-                return Error.INVALID_EMAIL;
+                return Errors.invalidEmail;
               }
               return null;
             },
@@ -160,7 +194,7 @@ class _LoginFormState extends State<LoginForm> {
             controller: _passwordController,
             validator: (value) {
               if (value.isEmpty) {
-                return Error.EMPTY_FIELDS;
+                return Errors.emptyField;
               }
               return null;
             },
@@ -185,20 +219,20 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ),
           Container(
+            margin: const EdgeInsets.symmetric(vertical: 25),
             width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(0, 25, 0, 10),
             child: RaisedButton(
-              child: Text(
-                'Iniciar sesión',
-              ),
+              padding: const EdgeInsets.all(15),
               onPressed: _submit,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+              child: Text(
+                'Iniciar sesion',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                ),
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 70.0, vertical: 8.0),
             ),
-          ),
+          )
         ],
       ),
     );

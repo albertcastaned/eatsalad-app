@@ -1,123 +1,173 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:progress_dialog/progress_dialog.dart';
+import 'package:http/http.dart' as http;
 
-import '../exceptions/authentication_exception.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
-import '../utils.dart';
+import '../utils/api_utils.dart';
 
-class Auth with ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+class Auth extends ChangeNotifier {
+  Auth({
+    @required this.auth,
+    @required this.googleSignIn,
+  });
 
-  final _googleSignIn = GoogleSignIn();
+  final FirebaseAuth auth;
+  final GoogleSignIn googleSignIn;
 
-  bool get isLoggedIn => _auth.currentUser != null;
+  bool get isLoggedIn => auth.currentUser != null;
 
-  Future<void> _authenticate(UserCredential userCredential) async {
-    final apiUrl = "${Constants.server}/profile/";
+  Future<bool> authenticate(UserCredential userCredentials,
+      [http.Client client]) async {
+    final url = "$server/profile/";
 
     try {
-      String idToken = await userCredential.user.getIdToken();
+      final token = await userCredentials.user.getIdToken();
 
-      await apiGet(apiUrl, requestApiHeaders(idToken));
+      final response = await ApiHandler.request(
+        method: HTTP_METHOD.get,
+        url: url,
+        token: token,
+        client: client,
+      );
 
+      // Save profile as json in shared preferences
+      final prefs = await SharedPreferences.getInstance();
+      final myProfile = Profile.fromJson(response['profile']);
+      prefs.setString("profile", jsonEncode(myProfile));
+      print(jsonEncode(myProfile));
       print('Api auth succeded');
       notifyListeners();
+      return true;
     } on TimeoutException catch (e) {
       print(e);
-      throw new TimeoutException('Time out');
+      throw TimeoutException('Time out');
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
-    await _googleSignIn.signOut();
+    await auth.signOut();
+    await googleSignIn.signOut();
     print("User signed out");
     notifyListeners();
   }
 
-  Future<void> signUpEmailPassword(
-      BuildContext context, String email, String password) async {
-    ProgressDialog loadingDialog =
-        buildLoadingDialog(context, 'Creando usuario...');
-    await loadingDialog.show();
-
+  Future<bool> signUpEmailPassword(String email, String password) async {
     try {
-      final User user = (await _auth.createUserWithEmailAndPassword(
-              email: email, password: password))
-          .user;
-      assert(user != null);
-    } catch (error) {
-      throw error;
-    } finally {
-      loadingDialog.hide();
+      await auth.createUserWithEmailAndPassword(
+          email: email, password: password);
+      return true;
+    } on FirebaseAuthException {
+      rethrow;
+    } on TimeoutException {
+      rethrow;
     }
   }
 
-  Future<void> signInWithEmail(
-      BuildContext context, String email, String password) async {
-    ProgressDialog dialog = buildLoadingDialog(context, 'Iniciando sesión...');
-    await dialog.show();
-
+  Future<UserCredential> signInWithEmail(String email, String password) async {
     try {
-      final UserCredential authResult = await _auth.signInWithEmailAndPassword(
+      final userCredential = await auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-
-      assert(authResult != null);
-      assert(authResult.user.uid.isNotEmpty);
-      print("Firebase auth succeded");
-
-      await _authenticate(authResult);
-    } catch (error) {
-      throw error;
-    } finally {
-      dialog.hide();
+      assert(userCredential != null);
+      return userCredential;
+    } on FirebaseAuthException {
+      rethrow;
+    } on TimeoutException {
+      throw TimeoutException('Petition time run out');
     }
   }
 
-  Future<dynamic> authenticateWithGoogle(BuildContext context) async {
+  Future<UserCredential> authenticateWithGoogle(
+      [OAuthCredential credential]) async {
     GoogleSignInAuthentication googleSignInAuthentication;
     GoogleSignInAccount googleSignInAccount;
-    googleSignInAccount = await _googleSignIn.signIn();
+    if (credential == null) {
+      try {
+        googleSignInAccount = await googleSignIn.signIn();
+        googleSignInAuthentication = await googleSignInAccount.authentication;
+      } catch (error) {
+        throw PlatformException(code: 'Cancelled');
+      }
 
-    try {
-      googleSignInAuthentication = await googleSignInAccount.authentication;
-    } catch (error) {
-      throw AuthenticationException("Google flow cancelled");
+      credential = GoogleAuthProvider.credential(
+        idToken: googleSignInAuthentication.idToken,
+        accessToken: googleSignInAuthentication.accessToken,
+      );
     }
 
-    final AuthCredential credential = GoogleAuthProvider.credential(
-      idToken: googleSignInAuthentication.idToken,
-      accessToken: googleSignInAuthentication.accessToken,
-    );
-
-    final UserCredential authResult =
-        await _auth.signInWithCredential(credential);
-    final User user = authResult.user;
-    assert(!user.isAnonymous);
-
-    final User currentUser = _auth.currentUser;
-    assert(user.uid == currentUser.uid);
-    print("Firebase auth succeded");
-
-    ProgressDialog dialog = buildLoadingDialog(context, 'Iniciando sesión...');
-    await dialog.show();
-
     try {
-      await _authenticate(authResult);
-    } catch (error) {
-      throw error;
-    } finally {
-      dialog.hide();
+      final userCredential = await auth.signInWithCredential(credential);
+      return userCredential;
+    } on TimeoutException {
+      rethrow;
+    } on FirebaseAuthException {
+      rethrow;
     }
+  }
 
-    print('Signed in with google succesfully: $user');
+  Future<Profile> fetchMyProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      print(prefs.getString("profile"));
+      final profile = prefs.getString("profile");
+      if (profile == null) {
+        throw Exception('Profile not set');
+      } else {
+        Map<String, dynamic> profileMap;
+        profileMap = jsonDecode(profile) as Map<String, dynamic>;
+        var myProfile = Profile.fromJson(profileMap);
+        return myProfile;
+      }
+    } catch (error) {
+      rethrow;
+    }
+  }
+}
+
+class Profile {
+  int id;
+  String phoneNumber;
+  String firstName;
+  String lastName;
+  String stripeCustomerId;
+
+  Profile(
+      {this.id,
+      this.phoneNumber,
+      this.firstName,
+      this.lastName,
+      this.stripeCustomerId});
+
+  Profile.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    phoneNumber = json['phone_number'];
+    firstName = json['first_name'];
+    lastName = json['last_name'];
+    stripeCustomerId = json['stripe_customer_id'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+    data['id'] = id;
+    data['phone_number'] = phoneNumber;
+    data['first_name'] = firstName;
+    data['last_name'] = lastName;
+    data['stripe_customer_id'] = stripeCustomerId;
+    return data;
+  }
+
+  @override
+  String toString() {
+    return "$id $firstName $lastName";
   }
 }
