@@ -12,7 +12,6 @@ import 'package:http/http.dart' as http;
 class MockClient extends Mock implements http.Client {}
 
 void main() {
-  final client = MockClient();
   final testCard =
       CreditCardModel("4242424242424242", "2/25", "Test Guy", '123', true);
   final headers = <String, String>{
@@ -21,6 +20,8 @@ void main() {
   };
   group('Stripe add new payment method', () {
     test('returns successful', () async {
+      final client = MockClient();
+
       when(
         client.post(any, body: anyNamed('body'), headers: anyNamed('headers')),
       ).thenAnswer((_) async => http.Response('{"id": "Test"}', 200));
@@ -41,6 +42,8 @@ void main() {
     });
 
     test('returns unsuccessful', () async {
+      final client = MockClient();
+
       when(
         client.post(any, body: anyNamed('body'), headers: anyNamed('headers')),
       ).thenAnswer((_) async => http.Response('{"id": "Test"}', 400));
@@ -59,6 +62,8 @@ void main() {
           .called(1);
     });
     test('returns timeout', () async {
+      final client = MockClient();
+
       when(
         client.post(any, body: anyNamed('body'), headers: anyNamed('headers')),
       ).thenAnswer((_) async => throw TimeoutException('error'));
@@ -78,27 +83,35 @@ void main() {
   });
 
   group('Stripe add payment method to customer', () {
-    test('returns successful', () async {
-      when(
-        client.post(any, body: anyNamed('body'), headers: anyNamed('headers')),
-      ).thenAnswer((_) async => http.Response('{"id": "Test"}', 200));
+    test(
+      'returns successful',
+      () async {
+        final client = MockClient();
 
-      final response = await stripe.attachPaymentMethodToCustomer(
-        customerId: '1',
-        paymentMethodId: '1',
-        stripeHeaders: headers,
-        client: client,
-      );
-      expect(response.success, true);
-      expect(response.response,
-          jsonDecode(http.Response('{"id": "Test"}', 200).body));
+        when(
+          client.post(any,
+              body: anyNamed('body'), headers: anyNamed('headers')),
+        ).thenAnswer((_) async => http.Response('{"id": "Test"}', 200));
 
-      verify(client.post(any,
-              body: anyNamed('body'), headers: anyNamed('headers')))
-          .called(1);
-    });
+        final response = await stripe.attachPaymentMethodToCustomer(
+          customerId: '1',
+          paymentMethodId: '1',
+          stripeHeaders: headers,
+          client: client,
+        );
+        expect(response.success, true);
+        expect(response.response,
+            jsonDecode(http.Response('{"id": "Test"}', 200).body));
+
+        verify(client.post(any,
+                body: anyNamed('body'), headers: anyNamed('headers')))
+            .called(1);
+      },
+    );
 
     test('returns unsuccessful', () async {
+      final client = MockClient();
+
       when(
         client.post(any, body: anyNamed('body'), headers: anyNamed('headers')),
       ).thenAnswer((_) async => http.Response('{"id": "Test"}', 400));
@@ -117,6 +130,8 @@ void main() {
           .called(1);
     });
     test('returns timeout', () async {
+      final client = MockClient();
+
       when(
         client.post(any, body: anyNamed('body'), headers: anyNamed('headers')),
       ).thenAnswer((_) async => throw TimeoutException('error'));

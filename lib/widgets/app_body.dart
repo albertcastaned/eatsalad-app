@@ -1,5 +1,5 @@
-import 'package:EatSalad/constants.dart';
 import 'package:flutter/material.dart';
+import '../constants.dart';
 
 class AppBody extends StatelessWidget {
   final Widget child;
