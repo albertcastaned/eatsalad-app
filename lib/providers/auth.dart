@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:EatSalad/providers/profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -23,7 +24,7 @@ class Auth extends ChangeNotifier {
 
   bool get isLoggedIn => auth.currentUser != null;
 
-  Future<bool> authenticate(UserCredential userCredentials,
+  Future<void> authenticate(UserCredential userCredentials,
       [http.Client client]) async {
     final url = "$server/profile/";
 
@@ -37,14 +38,20 @@ class Auth extends ChangeNotifier {
         client: client,
       );
 
-      // Save profile as json in shared preferences
+      print(response);
+      final profile = Profile.fromJson(response);
       final prefs = await SharedPreferences.getInstance();
-      final myProfile = Profile.fromJson(response['profile']);
-      prefs.setString("profile", jsonEncode(myProfile));
-      print(jsonEncode(myProfile));
+
+      if (profile.firstTime) {
+        // Set shared preference data so user does profile setup
+        print("User is new");
+        prefs.setBool('firstTime', true);
+      } else {
+        print("User is not new.");
+        prefs.setBool('firstTime', false);
+      }
       print('Api auth succeded');
       notifyListeners();
-      return true;
     } on TimeoutException catch (e) {
       print(e);
       throw TimeoutException('Time out');
@@ -113,61 +120,5 @@ class Auth extends ChangeNotifier {
     } on FirebaseAuthException {
       rethrow;
     }
-  }
-
-  Future<Profile> fetchMyProfile() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      print(prefs.getString("profile"));
-      final profile = prefs.getString("profile");
-      if (profile == null) {
-        throw Exception('Profile not set');
-      } else {
-        Map<String, dynamic> profileMap;
-        profileMap = jsonDecode(profile) as Map<String, dynamic>;
-        var myProfile = Profile.fromJson(profileMap);
-        return myProfile;
-      }
-    } catch (error) {
-      rethrow;
-    }
-  }
-}
-
-class Profile {
-  int id;
-  String phoneNumber;
-  String firstName;
-  String lastName;
-  String stripeCustomerId;
-
-  Profile(
-      {this.id,
-      this.phoneNumber,
-      this.firstName,
-      this.lastName,
-      this.stripeCustomerId});
-
-  Profile.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    phoneNumber = json['phone_number'];
-    firstName = json['first_name'];
-    lastName = json['last_name'];
-    stripeCustomerId = json['stripe_customer_id'];
-  }
-
-  Map<String, dynamic> toJson() {
-    final data = <String, dynamic>{};
-    data['id'] = id;
-    data['phone_number'] = phoneNumber;
-    data['first_name'] = firstName;
-    data['last_name'] = lastName;
-    data['stripe_customer_id'] = stripeCustomerId;
-    return data;
-  }
-
-  @override
-  String toString() {
-    return "$id $firstName $lastName";
   }
 }

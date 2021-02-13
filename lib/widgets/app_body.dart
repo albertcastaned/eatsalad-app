@@ -5,19 +5,23 @@ class AppBody extends StatelessWidget {
   final Widget child;
   final String title;
   final bool isFullScreen;
+  final BottomNavigationBar bottomNavigationBar;
   AppBody({
     @required this.child,
     this.title,
+    this.bottomNavigationBar,
     this.isFullScreen = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: title == null ? null : Text(title),
-      ),
-      resizeToAvoidBottomInset: true,
+      appBar: title == null
+          ? null
+          : AppBar(
+              title: Text(title),
+            ),
+      bottomNavigationBar: bottomNavigationBar,
       body: isFullScreen
           ? SafeArea(
               child: Container(

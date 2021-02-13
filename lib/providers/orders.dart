@@ -21,15 +21,35 @@ class Orders extends ApiProvider<Order> {
     Map<String, dynamic> params,
     String token,
   }) async {
-    //TODO: Fetch my orders
     if (token == null) {
       token = await FirebaseAuth.instance.currentUser.getIdToken();
     }
-    throw UnimplementedError();
+    final url = "$server/orders/";
+    try {
+      final response = await ApiHandler.request(
+        method: HTTP_METHOD.get,
+        token: token,
+        url: url,
+        client: client,
+      );
+
+      items = ((response as List).map((item) => Order.fromJson(item)).toList())
+          .reversed
+          .toList();
+
+      notifyListeners();
+      return true;
+    } on TimeoutException {
+      rethrow;
+    } on HttpException {
+      rethrow;
+    } on InvalidJsonException {
+      rethrow;
+    }
   }
 
   @override
-  Future post({
+  Future<Order> post({
     item,
     http.Client client,
     String token,
@@ -41,13 +61,14 @@ class Orders extends ApiProvider<Order> {
       final url = "$server/orders/";
       final body = item.toJson();
 
-      await ApiHandler.request(
+      final response = await ApiHandler.request(
         method: HTTP_METHOD.post,
         body: body,
         token: token,
         url: url,
         client: client,
       );
+      return Order.fromJson(response);
     } on TimeoutException {
       rethrow;
     } on HttpException {
@@ -63,12 +84,13 @@ class Order implements BaseModel {
   String status;
   List<OrderItem> orderItems;
   Restaurant restaurant;
-  DateTime deliveryDatetime;
+  String deliveryDatetime;
   String orderDatetime;
   String subtotal;
   String total;
   bool payWithCash;
   String notes;
+  String address;
 
   Order(
       {this.id,
@@ -80,7 +102,8 @@ class Order implements BaseModel {
       this.subtotal,
       this.total,
       this.payWithCash,
-      this.notes});
+      this.notes,
+      this.address});
 
   Order.fromJson(Map<String, dynamic> json) {
     ApiHandler.validateJson(json, requiredKeys);
@@ -101,6 +124,7 @@ class Order implements BaseModel {
     total = json['total'];
     payWithCash = json['payWithCash'];
     notes = json['notes'];
+    address = json['address'];
   }
 
   Map<String, dynamic> toJson() {
@@ -110,6 +134,7 @@ class Order implements BaseModel {
     data['total'] = total;
     data['subtotal'] = subtotal;
     data['payWithCash'] = payWithCash;
+    data['address'] = address;
     data['orderitem_set'] = [
       for (OrderItem orderItem in orderItems) orderItem.toJson()
     ];

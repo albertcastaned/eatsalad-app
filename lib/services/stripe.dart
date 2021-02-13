@@ -40,6 +40,56 @@ Future<List> getPaymentMethods(String customerId) async {
   }
 }
 
+Future<StripeTransactionResponse> createPaymentIntent(
+    {@required String paymentMethod,
+    @required String customer,
+    @required int amount,
+    Map<String, String> stripeHeaders,
+    http.Client client}) async {
+  try {
+    final mClient = (client != null) ? client : http.Client();
+
+    // Create payment method
+    final createPaymentMethodUrl = '$apiBase/payment_intents';
+
+    final body = {
+      'payment_method': paymentMethod,
+      'amount': amount.toString(),
+      'currency': 'MXN',
+      'customer': customer
+    };
+
+    final response = await mClient
+        .post(
+          createPaymentMethodUrl,
+          body: body,
+          headers: (stripeHeaders == null) ? headers : stripeHeaders,
+        )
+        .timeout(Duration(seconds: timeoutSeconds));
+    final data = json.decode(response.body);
+
+    if (response.statusCode >= 400) {
+      return StripeTransactionResponse(
+          message: 'Transaction failed: $data', success: false, response: data);
+    }
+
+    return StripeTransactionResponse(
+      message: 'Transaction successful',
+      success: true,
+      response: data,
+    );
+  } on TimeoutException catch (error) {
+    print(error);
+    rethrow;
+  } catch (error) {
+    print(error);
+    return StripeTransactionResponse(
+      message: 'Transaction failed: ${error.toString}',
+      success: false,
+    );
+  }
+}
+
 Future<StripeTransactionResponse> createPaymentMethod(
     {@required CreditCardModel card,
     @required String customerId,

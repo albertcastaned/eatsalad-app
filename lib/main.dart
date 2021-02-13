@@ -17,10 +17,14 @@ import 'providers/address.dart';
 import 'providers/cart.dart';
 import 'providers/orders.dart';
 import 'providers/payment_methods.dart';
+import 'providers/payments.dart';
+import 'providers/profile.dart';
 import 'providers/restaurants.dart';
 // Screens
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/profile_setup_screen.dart';
+import 'widgets/content_loader.dart';
 
 Future main() async {
   await DotEnv().load('.env');
@@ -49,7 +53,13 @@ class EatApp extends StatelessWidget {
           create: (ctx) => Restaurants(),
         ),
         ChangeNotifierProvider(
+          create: (ctx) => MyProfile(),
+        ),
+        ChangeNotifierProvider(
           create: (ctx) => CategoriesProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (ctx) => Payments(),
         ),
         ChangeNotifierProvider(
           create: (ctx) => Cart(),
@@ -76,7 +86,20 @@ class EatApp extends StatelessWidget {
           ),
           debugShowCheckedModeBanner: false,
           //Theme
-          home: auth.isLoggedIn ? HomeScreen() : LoginScreen(),
+          home: auth.isLoggedIn
+              ? ContentLoader(
+                  future:
+                      Provider.of<MyProfile>(ctx, listen: false).isFirstTime,
+                  allowRefresh: false,
+                  widget: Consumer<MyProfile>(
+                    builder: (ctx, profile, _) => profile.firstTime
+                        ? ProfileConfigScreen(
+                            firstTime: true,
+                          )
+                        : HomeScreen(),
+                  ),
+                )
+              : LoginScreen(),
           routes: routes,
         ),
       ),

@@ -1,3 +1,4 @@
+import 'package:EatSalad/providers/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +20,7 @@ class _CardListScreenState extends State<CardListScreen> {
   Future<void> setFuture() async {
     try {
       final profile =
-          await Provider.of<Auth>(context, listen: false).fetchMyProfile();
+          await Provider.of<MyProfile>(context, listen: false).fetch();
       await Provider.of<PaymentMethods>(context, listen: false).fetch(
         params: {
           'stripeId': profile.stripeCustomerId,
@@ -41,51 +42,43 @@ class _CardListScreenState extends State<CardListScreen> {
     return AppBody(
       isFullScreen: true,
       title: 'Metodos de pago',
-      child: Center(
-        child: SingleChildScrollView(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ContentLoader(
-                  future: setFuture(),
-                  widget: Consumer<PaymentMethods>(
-                    builder: (ctx, data, child) => Flexible(
-                      child: ListView.separated(
-                        physics: NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        separatorBuilder: (context, intex) => Divider(),
-                        itemCount: data.items.length,
-                        itemBuilder: (context, index) =>
-                            !data.items[index].isCash
-                                ? PaymentTile(
-                                    paymentMethod: data.items[index],
-                                  )
-                                : CashPaymentTile(
-                                    cashPaymentMethod: data.items[index],
-                                  ),
-                      ),
-                    ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: ContentLoader(
+                future: setFuture,
+                widget: Consumer<PaymentMethods>(
+                  builder: (ctx, data, child) => ListView.separated(
+                    separatorBuilder: (context, intex) => Divider(),
+                    itemCount: data.items.length,
+                    itemBuilder: (context, index) => !data.items[index].isCash
+                        ? PaymentTile(
+                            paymentMethod: data.items[index],
+                          )
+                        : CashPaymentTile(
+                            cashPaymentMethod: data.items[index],
+                          ),
                   ),
                 ),
-                Container(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 30, horizontal: 50),
-                  width: double.infinity,
-                  child: RaisedButton(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    textColor: Colors.white,
-                    onPressed: () => Navigator.of(context)
-                        .pushNamed(AddCardScreen.routeName),
-                    child: Text(
-                      'Agregar nuevo metodo de pago',
-                    ),
-                  ),
-                )
-              ],
+              ),
             ),
-          ),
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+              width: double.infinity,
+              child: RaisedButton(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                textColor: Colors.white,
+                onPressed: () =>
+                    Navigator.of(context).pushNamed(AddCardScreen.routeName),
+                child: Text(
+                  'Agregar nuevo metodo de pago',
+                ),
+              ),
+            )
+          ],
         ),
       ),
     );

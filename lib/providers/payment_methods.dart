@@ -83,6 +83,11 @@ class PaymentMethods extends ChangeNotifier {
 
         if (!fetchedCards.contains(newCard)) fetchedCards.add(newCard);
       }
+
+      if (selectedMethod == null) {
+        selectedMethod = cashPaymentMethod;
+      }
+
       items = fetchedCards;
       return true;
     } on TimeoutException catch (error) {

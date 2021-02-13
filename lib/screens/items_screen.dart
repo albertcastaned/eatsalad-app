@@ -20,15 +20,13 @@ class ItemsScreen extends StatefulWidget {
 }
 
 class _ItemsScreenState extends State<ItemsScreen> {
-  Future<void> _future;
+  Function _future;
 
   @override
   void initState() {
     assert(widget.restaurant != null);
+    _future = Provider.of<CategoriesProvider>(context, listen: false).fetch;
 
-    _future = Provider.of<CategoriesProvider>(context, listen: false).fetch(
-      params: {'restaurant': widget.restaurant.id},
-    );
     super.initState();
   }
 
@@ -36,7 +34,7 @@ class _ItemsScreenState extends State<ItemsScreen> {
   Widget build(BuildContext context) {
     return AppBody(
       isFullScreen: true,
-      title: "Articulos",
+      title: "${widget.restaurant.name}",
       child: Container(
         child: Stack(
           children: [
@@ -44,7 +42,10 @@ class _ItemsScreenState extends State<ItemsScreen> {
               children: [
                 Expanded(
                   child: ContentLoader(
-                    future: _future,
+                    allowRefresh: true,
+                    future: () => _future(
+                      params: {'restaurant': widget.restaurant.id},
+                    ),
                     widget: Consumer<CategoriesProvider>(
                       builder: (ctx, categoryData, child) => ListView.separated(
                         separatorBuilder: (context, intex) => Divider(),
@@ -124,16 +125,18 @@ class ItemSection extends StatelessWidget {
           children: [
             Expanded(
               flex: 1,
-              child: item.image != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(15),
-                      child: Image.network(
-                        item.image,
-                        fit: BoxFit.fitWidth,
-                      ),
-                    )
-                  //TODO: Add default image
-                  : null,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.network(
+                  item.image,
+                  fit: BoxFit.fitWidth,
+                  errorBuilder: (context, _, __) => Image.asset(
+                    'assets/image_404.jpg',
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
+                ),
+              ),
             ),
             SizedBox(
               width: 40,
@@ -197,23 +200,37 @@ class _OrderCartPreviewState extends State<OrderCartPreview> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              cart.getQuantity(widget.restaurant).toString(),
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ValueContainer(
+              content: cart.getQuantity(widget.restaurant).toString(),
             ),
             Text(
               'Ver canasta',
               style:
                   TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            Text(
-              "\$${cart.getTotal(widget.restaurant).toString()}",
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+            ValueContainer(
+                content: "\$${cart.getTotal(widget.restaurant).toString()}"),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ValueContainer extends StatelessWidget {
+  final String content;
+  ValueContainer({this.content});
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+      decoration: BoxDecoration(
+        color: Color(0xff2d9649),
+        borderRadius: BorderRadius.circular(5.0),
+      ),
+      child: Text(
+        content,
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }

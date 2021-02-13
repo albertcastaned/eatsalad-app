@@ -153,6 +153,11 @@ class ItemHeader extends StatelessWidget {
         Image.network(
           item.image,
           fit: BoxFit.cover,
+          errorBuilder: (context, _, __) => Image.asset(
+            'assets/image_404.jpg',
+            fit: BoxFit.cover,
+            width: double.infinity,
+          ),
         ),
         Container(
           margin: EdgeInsets.symmetric(vertical: 5),

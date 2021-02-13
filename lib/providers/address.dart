@@ -26,9 +26,27 @@ class SelectedAddress extends ChangeNotifier {
       print("Address not set");
       return;
     }
-    selectedAddress = Address(
-        direction: direction, longitude: longitude, latitude: latitude);
+    selectedAddress =
+        Address(direction: direction, longitude: longitude, latitude: latitude);
 
     notifyListeners();
+  }
+
+  Future<void> setAddress(
+      String direction, String latitude, String longitude) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString("direction", direction);
+      prefs.setString("latitude", latitude);
+      prefs.setString("longitude", longitude);
+
+      print("New coordinates saved succesfully");
+      selectedAddress = Address(
+          direction: direction, longitude: longitude, latitude: latitude);
+
+      notifyListeners();
+    } catch (error) {
+      rethrow;
+    }
   }
 }

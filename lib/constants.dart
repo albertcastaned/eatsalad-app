@@ -51,4 +51,8 @@ class Errors {
       'la tarjeta. Valide los datos de nuevo.';
   static const invalidPaymentMethod = "Metodo de pago invalido. "
       "Intente de nuevo o con otro metodo";
+  static const timeout =
+      'Se acabo el tiempo de peticion. Verifique su conectividad';
+  static const invalidPhone =
+      "Este campo debe tener un numero telefonico valido";
 }

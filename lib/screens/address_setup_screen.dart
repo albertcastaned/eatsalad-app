@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
-import '../providers/restaurants.dart';
+import '../providers/address.dart';
+import '../providers/profile.dart';
+import '../utils/dialog_utils.dart';
 import '../widgets/app_body.dart';
 import '../widgets/content_loader.dart';
+import 'home_screen.dart';
 
 var googlePlace = GooglePlace(googleApiKey);
 
@@ -60,8 +63,12 @@ class _AddressSetupScreenState extends State<AddressSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context).settings.arguments as Map<String, Object>;
+    final firstTime =
+        (args == null || args['firstTime'] == null) ? false : args['firstTime'];
     return AppBody(
-      title: 'Elegir ubicacion',
+      title: 'Busca tu ubicacion',
       isFullScreen: true,
       child: SingleChildScrollView(
         child: Container(
@@ -77,20 +84,29 @@ class _AddressSetupScreenState extends State<AddressSetupScreen> {
                 },
               ),
               if (_results != null)
-                ContentLoader(
+                FutureBuilder(
                   future: _searchFuture,
-                  widget: Flexible(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) => LocationCard(
-                        direction: _results.predictions[index].description,
-                        placeId: _results.predictions[index].placeId,
-                      ),
-                      separatorBuilder: (context, index) => Divider(),
-                      itemCount: _results.predictions.length,
-                    ),
-                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return LoadingWidget();
+                    } else if (snapshot.hasError) {
+                      return Text('Ocurrio un error de conexion');
+                    } else {
+                      return Flexible(
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemBuilder: (context, index) => LocationCard(
+                            direction: _results.predictions[index].description,
+                            placeId: _results.predictions[index].placeId,
+                            firstTime: firstTime,
+                          ),
+                          separatorBuilder: (context, index) => Divider(),
+                          itemCount: _results.predictions.length,
+                        ),
+                      );
+                    }
+                  },
                 ),
               SizedBox(
                 height: 15,
@@ -121,28 +137,35 @@ class LocationCard extends StatelessWidget {
   final String longitude;
   final String placeId;
   final bool selected;
-
+  final bool firstTime;
   LocationCard({
     @required this.direction,
     this.latitude,
     this.longitude,
     this.placeId,
     this.selected = false,
+    this.firstTime,
   });
 
   Future<void> saveSelectedCoordinates(
       BuildContext context, String latitude, String longitude) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      prefs.setString("direction", direction);
-      prefs.setString("latitude", latitude);
-      prefs.setString("longitude", longitude);
+      await Provider.of<SelectedAddress>(context, listen: false)
+          .setAddress(direction, latitude, longitude);
 
-      print("New coordinates saved succesfully");
+      if (firstTime) {
+        await showSuccesfulDialog(
+          context,
+          "Ha terminado la configuracion inicial."
+          " Puede volver a cambiar estos datos desde 'Mi Perfil'",
+        );
 
-      // TODO: Find better way to do this ?
-      // Fetch restaurants again
-      Provider.of<Restaurants>(context, listen: false).fetch();
+        await Provider.of<MyProfile>(context, listen: false).removeFirstTime();
+
+        Navigator.of(context).popAndPushNamed(HomeScreen.routeName);
+      } else {
+        Navigator.of(context).pop();
+      }
     } catch (error) {
       rethrow;
     }
@@ -152,21 +175,21 @@ class LocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: !selected
-          ? () {
+          ? () async {
               if (latitude == null || longitude == null) {
                 assert(placeId != null);
 
-                googlePlace.details.get(placeId).then((value) {
+                googlePlace.details.get(placeId).then((value) async {
                   final newLatitude =
                       value.result.geometry.location.lat.toString();
                   final newLongitude =
                       value.result.geometry.location.lng.toString();
-                  saveSelectedCoordinates(context, newLatitude, newLongitude);
+                  await saveSelectedCoordinates(
+                      context, newLatitude, newLongitude);
                 });
               } else {
-                saveSelectedCoordinates(context, latitude, longitude);
+                await saveSelectedCoordinates(context, latitude, longitude);
               }
-              Navigator.of(context).pop();
             }
           : null,
       child: Container(

@@ -10,8 +10,8 @@ import '../constants.dart';
 Flushbar flushBar;
 const flushbarDuration = Duration(seconds: 3);
 const successDuration = Duration(seconds: 2);
-void buildError(BuildContext context, String message,
-    [String actionText, Function action]) {
+void buildFlashBar(BuildContext context, String message,
+    {String actionText, Function action, bool isError = true}) {
   flushBar = Flushbar(
     messageText: Text(
       message,
@@ -19,8 +19,9 @@ void buildError(BuildContext context, String message,
       style: TextStyle(color: Colors.white),
     ),
     duration: flushbarDuration,
-    backgroundColor: Theme.of(context).errorColor,
-    flushbarPosition: FlushbarPosition.TOP,
+    backgroundColor:
+        isError ? Theme.of(context).errorColor : Theme.of(context).primaryColor,
+    flushbarPosition: isError ? FlushbarPosition.TOP : FlushbarPosition.BOTTOM,
     mainButton: action != null
         ? FlatButton(
             onPressed: () {
@@ -36,7 +37,7 @@ void buildError(BuildContext context, String message,
   )..show(context);
 }
 
-Future<void> showSuccesfulDialog(String message, BuildContext context) {
+Future<void> showSuccesfulDialog(BuildContext context, String message) {
   final deviceSize = MediaQuery.of(context).size;
   final textScaleFactor = deviceSize.height / 800;
   return showDialog<void>(
@@ -100,35 +101,46 @@ ProgressDialog buildLoadingDialog(BuildContext context, [String message]) {
   return dialog;
 }
 
-Future<void> showDescriptionDialog(BuildContext context, String description,
-    [String title = "Descripcion"]) async {
+ProgressDialog showLoadingDialog({
+  @required BuildContext context,
+  ProgressDialogType dialogType = ProgressDialogType.Normal,
+  String message = "Cargando...",
+}) {
+  final progressDialog = ProgressDialog(
+    context,
+    isDismissible: false,
+    type: dialogType,
+  );
+  progressDialog.style(
+    padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+    message: message,
+    borderRadius: 10.0,
+    backgroundColor: Colors.white,
+    elevation: 10.0,
+    insetAnimCurve: Curves.easeInOut,
+    progressTextStyle: TextStyle(
+        color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
+    messageTextStyle: TextStyle(
+      color: Colors.black,
+      fontSize: 16.0,
+    ),
+  );
+  return progressDialog;
+}
+
+Future<void> showAlertDialog(
+    {@required BuildContext context,
+    @required String title,
+    @required String content,
+    List<Widget> actions}) {
+  final alert = AlertDialog(
+    title: Text(title),
+    content: Text(content),
+    actions: actions,
+    shape: RoundedRectangleBorder(),
+  );
   return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            title,
-            textAlign: TextAlign.center,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(
-                borderRadius,
-              ),
-            ),
-          ),
-          content: SingleChildScrollView(
-            child: Text(description),
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text('Ok'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            )
-          ],
-        );
-      });
+    context: context,
+    builder: (context) => alert,
+  );
 }

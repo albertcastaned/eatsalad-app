@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../constants.dart';
 import '../providers/auth.dart';
 import '../utils/dialog_utils.dart';
+
 import '../widgets/app_body.dart';
 import '../widgets/app_card.dart';
 
@@ -32,22 +33,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     _formKey.currentState.save();
+    final progressDialog = buildLoadingDialog(
+      context,
+      'Registrando usuario...',
+    );
+    progressDialog.show();
 
     try {
-      //TODO: loading dialogs...
       final success = await Provider.of<Auth>(context, listen: false)
           .signUpEmailPassword(_authData['email'], _authData['password']);
+      progressDialog.hide();
+
       if (success) {
         Navigator.of(context).pop();
       }
     } on PlatformException catch (error) {
       final errorMessage = Errors.userNotFound;
       print(error);
-      buildError(context, errorMessage);
+      progressDialog.hide();
+
+      buildFlashBar(context, errorMessage);
     } catch (error) {
       final errorMessage = Errors.connectionError;
       print(error);
-      buildError(context, errorMessage, 'Reintentar', _submit);
+      progressDialog.hide();
+
+      buildFlashBar(
+        context,
+        errorMessage,
+        actionText: 'Reintentar',
+        action: _submit,
+      );
     }
   }
 
@@ -61,12 +77,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: bodyPadding,
             child: Form(
               key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
+              child: ListView(
                 children: <Widget>[
-                  Image(image: AssetImage('assets/logo.jpeg')),
+                  Image(
+                    image: AssetImage('assets/logo.jpeg'),
+                    height: 150,
+                  ),
                   TextFormField(
                     decoration: InputDecoration(
                       labelText: 'Email',
@@ -129,6 +145,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   Container(
+                    alignment: Alignment.center,
                     margin: const EdgeInsets.symmetric(vertical: 20),
                     child: InkWell(
                       onTap: () => Navigator.pop(context),

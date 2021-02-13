@@ -46,4 +46,10 @@ class Cart extends ChangeNotifier {
     itemsMap[restaurant].remove(item);
     notifyListeners();
   }
+
+  void clearCart(Restaurant restaurant) {
+    checkInitMap(restaurant);
+    itemsMap[restaurant].clear();
+    notifyListeners();
+  }
 }

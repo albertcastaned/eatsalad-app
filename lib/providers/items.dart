@@ -269,7 +269,7 @@ class CategoriesProvider extends ApiProvider<Category> {
       if (token == null) {
         token = await FirebaseAuth.instance.currentUser.getIdToken();
       }
-      final url = "$server/categories/?restaurant=${params['restaurant']}]}";
+      final url = "$server/categories/?restaurant=${params['restaurant']}";
 
       final response = await ApiHandler.request(
         method: HTTP_METHOD.get,

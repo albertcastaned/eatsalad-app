@@ -1,3 +1,4 @@
+import 'package:EatSalad/providers/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_credit_card/credit_card_model.dart';
@@ -48,7 +49,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
 
     try {
       final profile =
-          await Provider.of<Auth>(context, listen: false).fetchMyProfile();
+          await Provider.of<MyProfile>(context, listen: false).fetch();
       final card = CreditCardModel(
         cardNumber,
         expiryDate,
@@ -63,7 +64,7 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
       );
       if (!createPaymentMethodResponse.success) {
         print(createPaymentMethodResponse);
-        buildError(context, Errors.stripeTransactionError);
+        buildFlashBar(context, Errors.stripeTransactionError);
       } else {
         final paymentMethod =
             PaymentMethod.fromJson(createPaymentMethodResponse.response);
@@ -77,15 +78,18 @@ class _CreditCardFormState extends State<CustomCreditCardForm> {
         if (attachPaymentMethodResponse.success) {
           Provider.of<PaymentMethods>(context, listen: false)
               .addPaymentMethod(paymentMethod);
-          await showSuccesfulDialog('Tarjeta aprobada', context);
+          await showSuccesfulDialog(
+            context,
+            'Tarjeta aprobada',
+          );
           Navigator.pop(context, true);
         } else {
           print(attachPaymentMethodResponse);
-          buildError(context, Errors.stripeTransactionError);
+          buildFlashBar(context, Errors.stripeTransactionError);
         }
       }
     } catch (error) {
-      buildError(context, Errors.connectionError);
+      buildFlashBar(context, Errors.connectionError);
       rethrow;
     } finally {
       loadingDialog.hide();
